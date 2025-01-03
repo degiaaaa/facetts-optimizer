@@ -1,0 +1,30 @@
+JobId=997504 JobName=labelingpretrain
+   UserId=bst080(4862) GroupId=butz(4032) MCS_label=N/A
+   Priority=11428 Nice=0 Account=butz QOS=normal
+   JobState=RUNNING Reason=None Dependency=(null)
+   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:00:00 TimeLimit=30-00:00:00 TimeMin=N/A
+   SubmitTime=2025-01-02T14:30:43 EligibleTime=2025-01-02T14:30:43
+   AccrueTime=2025-01-02T14:30:44
+   StartTime=2025-01-02T14:30:44 EndTime=2025-02-01T14:30:44 Deadline=N/A
+   PreemptEligibleTime=2025-01-02T14:31:44 PreemptTime=None
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2025-01-02T14:30:44 Scheduler=Main
+   Partition=cpu-galvani AllocNode:Sid=galvani-login:3845243
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=galvani-cn001
+   BatchHost=galvani-cn001
+   NumNodes=1 NumCPUs=8 NumTasks=1 CPUs/Task=8 ReqB:S:C:T=0:0:*:*
+   ReqTRES=cpu=8,mem=50G,node=1,billing=1
+   AllocTRES=cpu=8,mem=50G,node=1,billing=1
+   Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=*
+   MinCPUsNode=8 MinMemoryNode=50G MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/mnt/qb/home/butz/bst080/facetts-optimizer/data_labeling/labeling_weighted.sh
+   WorkDir=/mnt/qb/home/butz/bst080/facetts-optimizer/data_labeling
+   StdErr=/mnt/qb/home/butz/bst080/facetts-optimizer/data_labeling/weighted_tshd_045-997504.err
+   StdIn=/dev/null
+   StdOut=/mnt/qb/home/butz/bst080/facetts-optimizer/data_labeling/weighted_tshd_045-997504.out
+   Power=
+   
+

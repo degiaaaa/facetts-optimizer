@@ -1,0 +1,2 @@
+Text:  THIS IS ABOUT ADAM
+Conf:  5
