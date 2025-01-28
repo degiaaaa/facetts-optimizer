@@ -4,5 +4,4 @@ model/monotonic_align/build
 model/monotonic_align/model
 model/monotonic_align/core.c
 
-Miniconda3-latest-Linux-x86_64.sh
-lightning_logs/
+/mnt/qb/work/butz/bst080/faceGANtts/Miniconda3-latest-Linux-x86_64.sh
