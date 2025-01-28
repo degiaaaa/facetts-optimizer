@@ -11,7 +11,10 @@ def config():
     # Add this line to set a default value for perceptual_loss
     seed = int(os.getenv("seed", 37))
     perceptual_loss = int(os.getenv("perceptual_loss", 1))  # True: 1 / False: 0
-    local_checkpoint_dir = os.getenv("local_checkpoint_dir", "./checkpoints")
+    #local_checkpoint_dir = os.getenv("local_checkpoint_dir", "./checkpoints")
+    # Speaker Loss Weight
+    speaker_loss_weight = float(os.getenv("speaker_loss_weight", 0.1))
+
 
     # Dataset Configs
     dataset = os.getenv("dataset", "lrs3")
@@ -37,7 +40,7 @@ def config():
 
 
     # Experiment Configs
-    batch_size = int(os.getenv("batch_size", 256))
+    batch_size = int(os.getenv("batch_size", 256)) #it was 256 #for gpu =4 -> 256*4
     add_blank = int(os.getenv("add_blank", 1))  # True: 1 / False: 0
     snet_emb = int(os.getenv("snet_emb", 1))  # True: 1 / False: 0
     n_spks = int(os.getenv("n_spks", 2007))  # libritts:247, lrs3: 2007
@@ -87,14 +90,14 @@ def config():
     image_data_root = os.getenv("image_data_root", "jpg")
     audio_data_root = os.getenv("audio_data_root", "wav")
 
-    log_dir = os.getenv("CHECKPOINTS", "./logs")
+    #log_dir = os.getenv("CHECKPOINTS", "./logs")
     log_every_n_steps = int(os.getenv("log_every_n_steps", 1000))
 
-    num_gpus = int(os.getenv("num_gpus", 1))
+    num_gpus = int(os.getenv("num_gpus", 1)) #it was 1 -> 
     per_gpu_batchsize = int(batch_size / num_gpus)
     num_nodes = int(os.getenv("num_nodes", 1))
     num_workers = int(os.getenv("num_workers", 2))
-    prefetch_factor = int(os.getenv("prefetch_factor", 2))
+    prefetch_factor = int(os.getenv("prefetch_factor", 2)) # it was 2
 
     # Inference Configs
     test_txt = os.getenv("test_txt", "test/text.txt")

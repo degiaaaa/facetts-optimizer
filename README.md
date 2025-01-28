@@ -12,7 +12,15 @@ This repository is the official implementation of Face-TTS.
 
 1. Install python packages
 ```
-pip install -r requirements.txt
+pip install -r requirements_label_env.txt
+```
+
+```
+pip install -r requirements_syncnet_env.txt
+```
+
+```
+pip install -r requirements_train_env.txt
 ```
 
 2. Build monotonic align module
@@ -24,17 +32,38 @@ cd model/monotonic_align; python setup.py build_ext --inplace; cd ../..
 ## Preparation
 1. Download trained model weights from <a href="https://drive.google.com/file/d/18ERr-91Z1Mnc2Aq9n1nBPijzb5gSymLq/view?usp=sharing">here</a>
 
-2. Download <a href="https://mmai.io/datasets/lip_reading/">LRS3</a> into `'data/lrs3/'`
+2. Download <a href="https://www.robots.ox.ac.uk/~vgg/data/lip_reading/lrs2.html">LRS2</a> into `'data/lrs2/'` 
+
 
 3. Extract and save audio as '*.wav' files in `'data/lrs3/wav'`
+  ```
+   conda activate syncnet_env 
+   ```
+
    ```
    python data/extract_audio.py
    ```
 
+4. Data Labeling and Preprocessing
+   ```
+   conda activate label_env 
+   ```
+
+   ```
+   python data_structure/lrs2_pipe.py
+   ```
+
+5. Crop and alignment of the video files
+:exclamation: Face should be cropped and aligned for LRS2 distribution. You can use <a href="https://github.com/joonson/syncnet_python/tree/master/detectors">'syncnet_python/detectors'</a>. 
+  ```
+   conda activate syncnet_env 
+   ```
+   ```
+   python lrs2_alignment/syncnet_python/lrs2_cropping.py
+   ```
+
 ---
 ## Test
-
-:exclamation: Face should be cropped and aligned for LRS3 distribution. You can use <a href="https://github.com/joonson/syncnet_python/tree/master/detectors">'syncnet_python/detectors'</a>.
 
 1. Prepare text description in txt file.
 ```

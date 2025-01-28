@@ -1,9 +1,0 @@
-numpy==1.24.4
-opencv-python==4.9.0.80
-opencv-python-headless==4.10.0.84
-shutilwhich==1.1.0
-dlib==19.24.0
-retina-face==0.0.17
-face-recognition==1.3.0
-face_recognition_models==0.3.0
-torch==2.4.1

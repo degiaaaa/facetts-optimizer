@@ -278,7 +278,7 @@ class FaceTTS(pl.LightningModule):
 
         return loss
 
-    def on_train_epoch_end(self, x): # it was training_epoch_end
+    def on_train_epoch_end(self): # it was training_epoch_end(self,x)
         return
 
     def validation_step(self, batch, batch_idx):
