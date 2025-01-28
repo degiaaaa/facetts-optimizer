@@ -11,6 +11,7 @@ import numpy as np
 
 from text import text_to_sequence
 from text import symbols
+import time
 
 
 class LRS3Dataset(torch.utils.data.Dataset):
@@ -77,8 +78,9 @@ class LRS3Dataset(torch.utils.data.Dataset):
         
         text = (
             open(os.path.join(self.video_dir, textpath))
-            .readlines()[0]
-            .split(":")[1]
+            #.readlines()[0] #NEW because of text transformation
+            #.split(":")[1] #NEW because of text transformation
+            .read() #NEW because of text transformation
             .strip()
         )
         
@@ -108,53 +110,112 @@ class LRS3Dataset(torch.utils.data.Dataset):
         return text_norm
 
 
-    def load_random_frame(self, datadir, filename, len_frame=1):
-        # len_frame == -1: load all frames
-        # else: load random index frame with len_frames
-        cap = cv2.VideoCapture(os.path.join(datadir, filename))
+    # def load_random_frame(self, datadir, filename, len_frame=1):
+    #     # len_frame == -1: load all frames
+    #     # else: load random index frame with len_frames
+    #     cap = cv2.VideoCapture(os.path.join(datadir, filename))
         
-        # Check if the video opened successfully
-        if not cap.isOpened():
-            raise FileNotFoundError(f"Unable to open video file: {os.path.join(datadir, filename)}")
+    #     # Check if the video opened successfully
+    #     if not cap.isOpened():
+    #         raise FileNotFoundError(f"Unable to open video file: {os.path.join(datadir, filename)}")
 
-        nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    #     nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        if len_frame == -1:
-            ridx = 0
-            loadframe = nframes
-        else:
-            # Ensure ridx is within bounds
-            if nframes <= 2:
-                raise ValueError(f"Video file {filename} does not have enough frames.")
-            ridx = random.randint(2, nframes - len_frame)
-            loadframe = len_frame
-            cap.set(cv2.CAP_PROP_POS_FRAMES, ridx)
+    #     if len_frame == -1:
+    #         ridx = 0
+    #         loadframe = nframes
+    #     else:
+    #         # Ensure ridx is within bounds
+    #         if nframes <= 2:
+    #             raise ValueError(f"Video file {filename} does not have enough frames.")
+    #         ridx = random.randint(2, nframes - len_frame)
+    #         loadframe = len_frame
+    #         cap.set(cv2.CAP_PROP_POS_FRAMES, ridx)
 
-        imgs = []
-        target_size = (224, 224)  # Resizing target size
+    #     imgs = []
+    #     target_size = (224, 224)  # Resizing target size
 
-        for i in range(loadframe):
-            ret, img = cap.read()
+    #     for i in range(loadframe):
+    #         ret, img = cap.read()
             
-            if not ret:
-                raise ValueError(f"Failed to read frame {ridx + i} from video {filename}")
+    #         if not ret:
+    #             raise ValueError(f"Failed to read frame {ridx + i} from video {filename}")
 
-            # Handle grayscale or single-channel images
-            if len(img.shape) == 2:  # Grayscale image
-                img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-            elif img.shape[2] == 1:  # Single-channel image
-                img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+    #         # Handle grayscale or single-channel images
+    #         if len(img.shape) == 2:  # Grayscale image
+    #             img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+    #         elif img.shape[2] == 1:  # Single-channel image
+    #             img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
-            img = cv2.resize(img, target_size)
-            imgs.append(img)
+    #         img = cv2.resize(img, target_size)
+    #         imgs.append(img)
 
-        cap.release()
+    #     cap.release()
 
-        # Stack frames and change the shape to match expected output
-        imgs = np.stack(imgs, axis=0)  # Stack frames along the first axis
-        imgs = np.transpose(imgs, (0, 3, 1, 2))  # Convert to (num_frames, channels, height, width)
+    #     # Stack frames and change the shape to match expected output
+    #     imgs = np.stack(imgs, axis=0)  # Stack frames along the first axis
+    #     imgs = np.transpose(imgs, (0, 3, 1, 2))  # Convert to (num_frames, channels, height, width)
 
-        return imgs
+    #     return imgs
+
+    def load_random_frame(self, datadir, filename, len_frame=1):
+        """
+        Load a random frame from a video file, with retry mechanism for handling file access issues.
+        """
+        max_attempts=5
+        attempt = 0
+        while attempt < max_attempts:
+            try:
+                cap = cv2.VideoCapture(os.path.join(datadir, filename))
+
+                if not cap.isOpened():
+                    raise FileNotFoundError(f"Unable to open video file: {os.path.join(datadir, filename)}")
+
+                nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+                if len_frame == -1:
+                    ridx = 0
+                    loadframe = nframes
+                else:
+                    if nframes <= 2:
+                        raise ValueError(f"Video file {filename} does not have enough frames.")
+                    ridx = random.randint(2, nframes - len_frame)
+                    loadframe = len_frame
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, ridx)
+
+                imgs = []
+                target_size = (224, 224)
+
+                for i in range(loadframe):
+                    ret, img = cap.read()
+                    if not ret:
+                        raise ValueError(f"Failed to read frame {ridx + i} from video {filename}")
+
+                    if len(img.shape) == 2:
+                        img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+                    elif img.shape[2] == 1:
+                        img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+
+                    img = cv2.resize(img, target_size)
+                    imgs.append(img)
+
+                cap.release()
+
+                imgs = np.stack(imgs, axis=0)  # Stack frames along the first axis
+                imgs = np.transpose(imgs, (0, 3, 1, 2))  # Convert to (num_frames, channels, height, width)
+                return imgs
+
+            except (FileNotFoundError, ValueError) as e:
+                print(f"Attempt {attempt + 1} failed for {filename}: {e}")
+                attempt += 1
+                if attempt < max_attempts:
+                    print("Retrying...")
+                    time.sleep(10)
+                else:
+                    raise FileNotFoundError(f"Failed to load {filename} after {max_attempts} attempts.")
+
+        return None  # Fallback (unreachable due to raise above)
+
 
 
 class TextMelVideoBatchCollate(object):
