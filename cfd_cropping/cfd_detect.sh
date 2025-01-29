@@ -17,4 +17,4 @@ source /home/butz/bst080/miniconda3/etc/profile.d/conda.sh
 #conda activate label_env
 conda activate /mnt/qb/home/butz/bst080/miniconda3/envs/label_env
 
-srun conda run -p /mnt/qb/home/butz/bst080/miniconda3/envs/label_env python /mnt/qb/work/butz/bst080/facetts-optimizer/cfd_cropping/cfd_detect.py --data_path /qb/work2/butz1/bst080/working_copy_main
+srun conda run -p /mnt/qb/home/butz/bst080/miniconda3/envs/label_env python /mnt/qb/work/butz/bst080/faceGANtts/cfd_cropping/cfd_detect.py --data_path /qb/work2/butz1/bst080/working_copy_main

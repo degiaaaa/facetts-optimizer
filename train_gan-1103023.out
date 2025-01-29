@@ -1,0 +1,32 @@
+JobId=1103023 JobName=train_gan
+   UserId=bst080(4862) GroupId=butz(4032) MCS_label=N/A
+   Priority=11443 Nice=0 Account=butz QOS=normal
+   JobState=RUNNING Reason=None Dependency=(null)
+   Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:00:01 TimeLimit=3-00:00:00 TimeMin=N/A
+   SubmitTime=2025-01-29T20:52:12 EligibleTime=2025-01-29T20:52:12
+   AccrueTime=2025-01-29T20:52:13
+   StartTime=2025-01-29T20:52:18 EndTime=2025-02-01T20:52:18 Deadline=N/A
+   PreemptEligibleTime=2025-01-29T20:53:18 PreemptTime=None
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2025-01-29T20:52:18 Scheduler=Backfill
+   Partition=2080-galvani AllocNode:Sid=galvani-login:578878
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=galvani-cn113
+   BatchHost=galvani-cn113
+   NumNodes=1 NumCPUs=48 NumTasks=1 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
+   ReqTRES=cpu=1,mem=80G,node=1,billing=4,gres/gpu=6
+   AllocTRES=cpu=48,mem=80G,node=1,billing=13,gres/gpu=6,gres/gpu:rtx2080ti=6
+   Socks/Node=* NtasksPerN:B:S:C=1:0:*:* CoreSpec=*
+   MinCPUsNode=1 MinMemoryNode=80G MinTmpDiskNode=0
+   Features=(null) DelayBoot=00:00:00
+   OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null)
+   Command=/mnt/qb/work/butz/bst080/faceGANtts/train_gan.sh
+   WorkDir=/mnt/qb/work/butz/bst080/faceGANtts
+   StdErr=/mnt/qb/work/butz/bst080/faceGANtts/train_gan-1103023.err
+   StdIn=/dev/null
+   StdOut=/mnt/qb/work/butz/bst080/faceGANtts/train_gan-1103023.out
+   Power=
+   CpusPerTres=gpu:8
+   TresPerNode=gres:gpu:6
+   
+
