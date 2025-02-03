@@ -8,7 +8,7 @@ import face_recognition
 
 # Paths for dataset directories
 base_path = "/mnt/qb/work2/butz1/bst080/data/mvlrs_v1"
-context = "pretrain"
+context = "main"
 main_path = os.path.join(base_path, context)
 speaker_ids_main = os.path.join(base_path, f"spk_ids_{context}")
 
