@@ -16,10 +16,6 @@ pip install -r requirements_label_env.txt
 ```
 
 ```
-pip install -r requirements_syncnet_env.txt
-```
-
-```
 pip install -r requirements_train_env.txt
 ```
 
@@ -37,7 +33,7 @@ cd model/monotonic_align; python setup.py build_ext --inplace; cd ../..
 
 3. Extract and save audio as '*.wav' files in `'data/lrs3/wav'`
   ```
-   conda activate syncnet_env 
+   conda activate train_env 
    ```
 
    ```

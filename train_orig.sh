@@ -7,6 +7,8 @@
 #SBATCH --time=3-00:00:00       # Maximum runtime
 #SBATCH --output=train_orig-%j.out
 #SBATCH --error=train_orig-%j.err
+#SBATCH --mail-type=END,FAIL       # Notify when job ends or fails
+#SBATCH --mail-user=debie1997@yahoo.de  # Your email address
 
 # Diagnostic Phase
 scontrol show job $SLURM_JOB_ID
