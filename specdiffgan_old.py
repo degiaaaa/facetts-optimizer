@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
-from pytorch_lightning import LightningModule
 from torch.optim import Adam
 import librosa
 import numpy as np
@@ -10,7 +9,7 @@ import numpy as np
 # Import necessary components from your project
 from model.face_tts import FaceTTS
 from model.utils import sequence_mask
-
+from torch.nn.utils import weight_norm, spectral_norm
 
 # -------------------------
 # Voice Feature Extraction
@@ -63,32 +62,66 @@ class VoiceFeatureExtractor:
 # ------------------------------------------
 # Spectrogram Discriminator with Aux Losses
 # ------------------------------------------
-class SpectrogramDiscriminator(LightningModule):
-    def __init__(self, in_channels=1, base_channels=32, num_layers=3, lrelu_slope=0.2):
-        super().__init__()
-        self.layers = nn.ModuleList()
+class SpectrogramDiscriminator(pl.LightningModule):
+    def __init__(self, _config):
+        super(SpectrogramDiscriminator, self).__init__()
+        self.config = _config
+        self.LRELU_SLOPE = _config["lReLU_slope"]
+        self.multi_speaker = _config["multi_spks"]
+        self.residual_channels = _config["residual_channels"]
+        self.use_spectral_norm = _config["use_spectral_norm"]
+        norm_f = (weight_norm if self.use_spectral_norm else spectral_norm)
 
-        for i in range(num_layers):
-            self.layers.append(
-                nn.Conv2d(
-                    in_channels if i == 0 else base_channels * (2 ** (i - 1)),
-                    base_channels * (2 ** i),
-                    kernel_size=4,
-                    stride=2,
-                    padding=1
-                )
-            )
-            self.layers.append(nn.LeakyReLU(lrelu_slope, inplace=True))
+        self.conv_prev = norm_f(nn.Conv2d(1, 32, (3, 9), padding=(1, 4)))
+        self.convs = nn.ModuleList(
+            [
+                norm_f(nn.Conv2d(32, 32, (3, 9), stride=(1, 2), padding=(1, 4))),
+                norm_f(nn.Conv2d(32, 32, (3, 9), stride=(1, 2), padding=(1, 4))),
+                norm_f(nn.Conv2d(32, 32, (3, 9), stride=(1, 2), padding=(1, 4))),
+            ]
+        )
 
-        self.final_conv = nn.Conv2d(base_channels * (2 ** (num_layers - 1)), 1, kernel_size=4, stride=1, padding=0)
+        if self.multi_speaker:
+            self.spk_mlp = nn.Sequential(norm_f(nn.Linear(self.residual_channels, 32)))
 
-    def forward(self, x):
-        feature_maps = []
-        for layer in self.layers:
+        self.conv_post = nn.ModuleList(
+            [
+                norm_f(nn.Conv2d(32, 32, (3, 3), padding=(1, 1))),
+                norm_f(nn.Conv2d(32, 1, (3, 3), padding=(1, 1))),
+            ]
+        )
+
+    def forward(self, x, speaker_emb=None):
+        print(f"[DEBUG] Initial x shape: {x.shape}")
+        fmap = []
+
+       # x = x.unsqueeze(1)  # Add channel dimension
+        x = self.conv_prev(x)
+        print(f"[DEBUG] Shape after first Conv2D layer: {x.shape}")
+        x = F.leaky_relu(x, self.LRELU_SLOPE)
+        fmap.append(x)
+
+        if self.multi_speaker and speaker_emb is not None:
+            print(f"[DEBUG] Speaker embedding shape before processing: {speaker_emb.shape}")
+            speaker_emb = self.spk_mlp(speaker_emb).unsqueeze(-1).expand(-1, -1, x.shape[-2]).unsqueeze(-1)
+            print(f"[DEBUG] Speaker embedding shape after expansion: {speaker_emb.shape}")
+            x = x + speaker_emb  # Inject speaker identity into the feature map
+
+        for i, layer in enumerate(self.convs):
             x = layer(x)
-            feature_maps.append(x)
-        x = self.final_conv(x)
-        return x.view(x.size(0), -1), feature_maps
+            print(f"[DEBUG] Shape after Conv2D layer {i + 1}: {x.shape}")
+            x = F.leaky_relu(x, self.LRELU_SLOPE)
+            fmap.append(x)
+
+        x = self.conv_post[0](x)
+        print(f"[DEBUG] Shape after post-processing Conv2D (1): {x.shape}")
+        x = F.leaky_relu(x, self.LRELU_SLOPE)
+        x = self.conv_post[1](x)
+        print(f"[DEBUG] Shape after post-processing Conv2D (2): {x.shape}")
+        x = torch.flatten(x, 1, -1)  # Flatten the final output
+        print(f"[DEBUG] Final output shape of SpectrogramDiscriminator: {x.shape}")
+
+        return fmap, x
 
 
 # -------------------------
@@ -97,7 +130,8 @@ class SpectrogramDiscriminator(LightningModule):
 class FaceTTSWithDiscriminator(FaceTTS):
     def __init__(self, _config):
         super().__init__(_config)
-        self.discriminator = SpectrogramDiscriminator()
+        self.config = _config
+        self.discriminator = SpectrogramDiscriminator(_config)
         self.feature_extractor = VoiceFeatureExtractor(_config)
         self.adv_criterion = nn.MSELoss()
         self.fm_criterion = nn.L1Loss()
@@ -159,6 +193,7 @@ class FaceTTSWithDiscriminator(FaceTTS):
         return [generator_optimizer, discriminator_optimizer], []
 
     def training_step(self, batch, batch_idx, optimizer_idx):
+        print(f"[DEBUG] Batch index: {batch_idx}")
         x, x_len, y, y_len, spk = (
             batch['x'].to(self.device),
             batch['x_len'],
@@ -166,36 +201,54 @@ class FaceTTSWithDiscriminator(FaceTTS):
             batch['y_len'],
             batch['spk'].to(self.device),
         )
+        print(f"[DEBUG] x.shape: {x.shape}, y.shape: {y.shape}, spk.shape: {spk.shape}")
 
         # Generate mel-spectrogram
         encoder_outputs, decoder_outputs, _ = self.forward(x, x_len, self.config['timesteps'], spk=spk)
         generated_mel = decoder_outputs[-1]
+        print(f"[DEBUG] generated_mel.shape: {generated_mel.shape}")
 
         # Extract F0, energy, and mel-spectrogram for real and fake
         real_f0 = self.feature_extractor.extract_f0(y.cpu().numpy())
         real_energy = self.feature_extractor.extract_energy(y.cpu().numpy())
         fake_f0 = self.feature_extractor.extract_f0(generated_mel.detach().cpu().numpy())
         fake_energy = self.feature_extractor.extract_energy(generated_mel.detach().cpu().numpy())
+        print(f"[DEBUG] real_f0.shape: {real_f0.shape}, fake_f0.shape: {fake_f0.shape}")
+        print(f"[DEBUG] real_energy.shape: {real_energy.shape}, fake_energy.shape: {fake_energy.shape}")
 
         # Discriminator step
         if optimizer_idx == 1:
             real_logits, real_features = self.discriminator(y.unsqueeze(1))
             fake_logits, fake_features = self.discriminator(generated_mel.detach().unsqueeze(1))
+            print(f"[DEBUG] Discriminator real_logits type: {type(real_logits)}, fake_logits type: {type(fake_logits)}")
+
+            real_logits = real_logits if isinstance(real_logits, torch.Tensor) else real_logits[0]
+            fake_logits = fake_logits if isinstance(fake_logits, torch.Tensor) else fake_logits[0]
+            print(f"[DEBUG] Discriminator after if else real_logits type: {type(real_logits)}, fake_logits type: {type(fake_logits)}")
+            print(f"[DEBUG] Discriminator real_logits[0]: {real_logits[0]}, fake_logits[0]: {fake_logits[0]}")
 
             real_loss = self.adv_criterion(real_logits, torch.ones_like(real_logits))
             fake_loss = self.adv_criterion(fake_logits, torch.zeros_like(fake_logits))
-
+            
             d_loss = (real_loss + fake_loss) / 2
             self.log('d_loss', d_loss, prog_bar=True, on_step=True, on_epoch=True)
+            print(f"[DEBUG] Discriminator Loss: {d_loss.item()}")
+            
             return d_loss
 
         # Generator step
         elif optimizer_idx == 0:
             fake_logits, fake_features = self.discriminator(generated_mel.unsqueeze(1))
+            #debugging
+            fake_logits = fake_logits if isinstance(fake_logits, torch.Tensor) else fake_logits[0]
+
             adv_loss = self.adv_criterion(fake_logits, torch.ones_like(fake_logits))
 
             # Feature Matching Loss
             real_logits, real_features = self.discriminator(y.unsqueeze(1))
+            #debugging
+            real_logits = real_logits if isinstance(real_logits, torch.Tensor) else real_logits[0]
+            
             fm_loss = self.compute_feature_matching_loss(real_features, fake_features)
 
             # Pitch and Energy Loss
@@ -213,6 +266,9 @@ class FaceTTSWithDiscriminator(FaceTTS):
             self.log("train/pitch_loss", pitch_loss, prog_bar=True, on_step=True, on_epoch=True)
             self.log("train/energy_loss", energy_loss, prog_bar=True, on_step=True, on_epoch=True)
             self.log('g_loss', g_loss, prog_bar=True, on_step=True, on_epoch=True)
+            
+            print(f"[DEBUG] Generator Loss: {g_loss.item()}")
+
             return g_loss
 
 import pytorch_lightning as pl
@@ -229,11 +285,13 @@ import torch
 
 @ex.automain
 def main(_config):
+    print("[DEBUG] Starting training...")
 
     _config = copy.deepcopy(_config)
     pl.seed_everything(_config["seed"])
 
     dm = _datamodules["dataset_" + _config["dataset"]](_config)
+    print("[DEBUG] Data module initialized")
 
     #os.makedirs(_config["local_checkpoint_dir"], exist_ok=True)
 
@@ -251,6 +309,7 @@ def main(_config):
 
     #model = FaceTTS(_config)
     model = FaceTTSWithDiscriminator(_config)
+    print("[DEBUG] Model initialized")
 
     model_summary_callback = pl.callbacks.ModelSummary(max_depth=2)
 
@@ -288,8 +347,11 @@ def main(_config):
         enable_model_summary=True,
         val_check_interval=_config["val_check_interval"],
     )
+    print("[DEBUG] Trainer initialized")
 
     if not _config["test_only"]:
+        print("[DEBUG] Starting training...")
         trainer.fit(model, datamodule=dm) #, ckpt_path=_config["resume_from"]
     else:
+        print("[DEBUG] Running test...")
         trainer.test(model, datamodule=dm) #, ckpt_path=_config["resume_from"]

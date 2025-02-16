@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH -J train_gan
-#SBATCH --partition=2080-galvani  # Use the CPU-only partition
-#SBATCH --ntasks-per-node=1              # Number of tasks
-#SBATCH --gres=gpu:6
-#SBATCH --mem=80G                # Amount of memory
+#SBATCH --partition=a100-galvani #2080-galvani #a100-fat-galvani  #a100-galvani
+#SBATCH --ntasks-per-node=8
+#SBATCH --gres=gpu:8
+#SBATCH --mem=100G                # Amount of memory
 #SBATCH --time=3-00:00:00       # Maximum runtime
 #SBATCH --output=train_gan-%j.out
 #SBATCH --error=train_gan-%j.err
@@ -14,9 +14,12 @@
 scontrol show job $SLURM_JOB_ID
 # Initialize conda
 source /mnt/qb/work2/butz1/bst080/miniconda3/etc/profile.d/conda.sh
-#conda env create --prefix /mnt/qb/work2/butz1/bst080/miniconda3/envs/train_env --file /mnt/qb/work/butz/bst080/train_env.yml
-# Activate the environment
-#conda activate label_env
+
 conda activate /mnt/qb/work2/butz1/bst080/miniconda3/envs/train_env  #/mnt/qb/home/butz/bst080/miniconda3/envs/label_env
 
-srun conda run -p /mnt/qb/work2/butz1/bst080/miniconda3/envs/train_env python /mnt/qb/work/butz/bst080/faceGANtts/run_gan.py
+export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
+#export PYTORCH_CUDA_ALLOC_CONF="max_split_size_mb:256"  # Reduce memory fragmentation
+nvidia-smi 
+#srun conda run -p /mnt/qb/work2/butz1/bst080/miniconda3/envs/train_env  python /mnt/qb/work/butz/bst080/faceGANtts/train_gan.py
+#srun python -m torch.distributed.run  /mnt/qb/work/butz/bst080/faceGANtts/train_gan.py
+srun python /mnt/qb/work/butz/bst080/faceGANtts/train_gan.py

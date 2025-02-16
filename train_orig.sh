@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH -J train_orig
-#SBATCH --partition=2080-galvani  # Use the CPU-only partition
-#SBATCH --ntasks-per-node=1               # Number of tasks
-#SBATCH --gres=gpu:6
-#SBATCH --mem=80G                # Amount of memory
+#SBATCH --partition=a100-galvani #2080-galvani #a100-fat-galvani  #a100-galvani
+#SBATCH --ntasks-per-node=8
+#SBATCH --gres=gpu:8
+#SBATCH --mem=100G                # Amount of memory
 #SBATCH --time=3-00:00:00       # Maximum runtime
 #SBATCH --output=train_orig-%j.out
 #SBATCH --error=train_orig-%j.err

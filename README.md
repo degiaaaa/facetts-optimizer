@@ -33,11 +33,11 @@ cd model/monotonic_align; python setup.py build_ext --inplace; cd ../..
 
 3. Extract and save audio as '*.wav' files in `'data/lrs3/wav'`
   ```
-   conda activate train_env 
+   conda activate label_env 
    ```
 
    ```
-   python data/extract_audio.py
+   python data/lrs2_preprocessing/lrs2_split/extract_audio.py
    ```
 
 4. Data Labeling and Preprocessing
@@ -46,7 +46,7 @@ cd model/monotonic_align; python setup.py build_ext --inplace; cd ../..
    ```
 
    ```
-   python data_structure/lrs2_pipe.py
+   python data/lrs2_preprocessing/labeling.py
    ```
 
 5. Crop and alignment of the video files

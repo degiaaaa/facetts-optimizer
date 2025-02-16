@@ -10,7 +10,7 @@ import face_recognition
 base_path = "/mnt/qb/work2/butz1/bst080/data/mvlrs_v1"
 context = "main"
 main_path = os.path.join(base_path, context)
-speaker_ids_main = os.path.join(base_path, f"spk_ids_{context}")
+speaker_ids_main = os.path.join(base_path, f"lrs2_labeled_{context}")
 
 # Create the output folder if it doesn't exist
 os.makedirs(speaker_ids_main, exist_ok=True)

@@ -12,17 +12,22 @@ def config():
     seed = int(os.getenv("seed", 37))
     perceptual_loss = int(os.getenv("perceptual_loss", 1))  # True: 1 / False: 0
     #local_checkpoint_dir = os.getenv("local_checkpoint_dir", "./checkpoints")
-    # Speaker Loss Weight
-    speaker_loss_weight = float(os.getenv("speaker_loss_weight", 0.1))
-
 
     # Dataset Configs
+    # dataset = os.getenv("dataset", "lrs3")
+    # lrs3_train = os.getenv("lrs3_train", "datalist/lrs3_train_long.list")
+    # lrs3_val = os.getenv("lrs3_val", "datalist/lrs3_val_long.list")
+    # lrs3_test = os.getenv("lrs3_test", "datalist/lrs3_test_long.list")
+    # lrs3_path = os.getenv("lrs3_path", "data/lrs3")
+    # cmudict_path = os.getenv("cmudict_path", "utils/cmu_dictionary")
+
     dataset = os.getenv("dataset", "lrs3")
-    lrs3_train = os.getenv("lrs3_train", "datalist/lrs3_train_long.list")
-    lrs3_val = os.getenv("lrs3_val", "datalist/lrs3_val_long.list")
-    lrs3_test = os.getenv("lrs3_test", "datalist/lrs3_test_long.list")
-    lrs3_path = os.getenv("lrs3_path", "data/lrs3")
+    lrs3_train = os.getenv("lrs3_train", "/mnt/qb/work2/butz1/bst080/data/mvlrs_v1/lrs2_splitted/datalist/lrs2_train_long.list")
+    lrs3_val = os.getenv("lrs3_val", "/mnt/qb/work2/butz1/bst080/data/mvlrs_v1/lrs2_splitted/datalist/lrs2_val_long.list")
+    lrs3_test = os.getenv("lrs3_test", "/mnt/qb/work2/butz1/bst080/data/mvlrs_v1/lrs2_splitted/datalist/lrs2_test_long.list")
+    lrs3_path = os.getenv("lrs3_path", "/mnt/qb/work2/butz1/bst080/data/mvlrs_v1/lrs2_splitted")
     cmudict_path = os.getenv("cmudict_path", "utils/cmu_dictionary")
+
 
     # Data Configs
     image_size = int(os.getenv("image_size", 224))
@@ -40,7 +45,7 @@ def config():
 
 
     # Experiment Configs
-    batch_size = int(os.getenv("batch_size", 256)) #it was 256 #for gpu =4 -> 256*4
+    batch_size = int(os.getenv("batch_size", 256)) #it was 256 #if gpu =4 -> 256%4 // For batch_size=64 no cuda out memory for gan
     add_blank = int(os.getenv("add_blank", 1))  # True: 1 / False: 0
     snet_emb = int(os.getenv("snet_emb", 1))  # True: 1 / False: 0
     n_spks = int(os.getenv("n_spks", 2007))  # libritts:247, lrs3: 2007
@@ -93,11 +98,11 @@ def config():
     #log_dir = os.getenv("CHECKPOINTS", "./logs")
     log_every_n_steps = int(os.getenv("log_every_n_steps", 1000))
 
-    num_gpus = int(os.getenv("num_gpus", 1)) #it was 1 -> 
+    num_gpus = int(os.getenv("num_gpus", 8)) #it was 1 -> 
     per_gpu_batchsize = int(batch_size / num_gpus)
     num_nodes = int(os.getenv("num_nodes", 1))
-    num_workers = int(os.getenv("num_workers", 2))
-    prefetch_factor = int(os.getenv("prefetch_factor", 2)) # it was 2
+    num_workers = int(os.getenv("num_workers", 2))  # Default is 2
+    prefetch_factor = int(os.getenv("preftch_factor", 2))  # Default is 2
 
     # Inference Configs
     test_txt = os.getenv("test_txt", "test/text.txt")
@@ -113,3 +118,11 @@ def config():
     resume_from = os.getenv("resume_from", "./ckpts/facetts_lrs3.pt")
     val_check_interval = float(os.getenv("val_check_interval", 1.0))
     test_only = int(os.getenv("test_only", 0))
+
+    # GAN-spezifische Hyperparameter
+    speaker_loss_weight = float(os.getenv("speaker_loss_weight", 0.1))
+    lambda_adv = float(os.getenv("lambda_adv", 1.0))
+    disc_learning_rate = float(os.getenv("disc_learning_rate", learning_rate))
+    lReLU_slope = float(os.getenv("lReLU_slope", 0.2))
+    use_spectral_norm = int(os.getenv("use_spectral_norm", 0)) # True: 1 / False: 0
+    residual_channels = int(os.getenv("residual_channels", 256))

@@ -17,4 +17,4 @@ source /mnt/qb/work2/butz1/bst080/miniconda3/etc/profile.d/conda.sh
 #conda activate label_env
 conda activate /mnt/qb/work2/butz1/bst080/miniconda3/envs/label_env  #/mnt/qb/home/butz/bst080/miniconda3/envs/label_env
 
-srun conda run -p /mnt/qb/work2/butz1/bst080/miniconda3/envs/label_env python /mnt/qb/work/butz/bst080/faceGANtts/lrs2_labeling/labeling.py --data_path /qb/work2/butz1/bst080/main
+srun conda run -p /mnt/qb/work2/butz1/bst080/miniconda3/envs/label_env python /mnt/qb/work/butz/bst080/faceGANtts/data/lrs2_preprocessing/labeling.py 

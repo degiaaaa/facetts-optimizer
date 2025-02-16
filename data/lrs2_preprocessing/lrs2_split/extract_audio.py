@@ -60,8 +60,8 @@ def dataProcessing(videoroot, audioroot=None, listname=None):
 def main():
     parser = argparse.ArgumentParser(description='Extract audio from videos.')
 
-    parser.add_argument('--vid_path', type=str, default='data/lrs3/mp4', help='Path to video files.')
-    parser.add_argument('--aud_path', type=str, default='data/lrs3/wav', help='Path to save extracted audio files.')
+    parser.add_argument('--vid_path', type=str, default='/mnt/qb/work2/butz1/bst080/data/mvlrs_v1/lrs2_splitted/mp4', help='Path to video files.')
+    parser.add_argument('--aud_path', type=str, default='/mnt/qb/work2/butz1/bst080/data/mvlrs_v1/lrs2_splitted/wav', help='Path to save extracted audio files.')
     parser.add_argument('--list_path', type=str, help='Path to list file (optional).')
 
     args = parser.parse_args()
