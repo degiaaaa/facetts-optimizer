@@ -109,20 +109,28 @@ def config():
     use_custom = int(os.getenv("use_custom", 1))
     test_faceimg = os.getenv("test_faceimg", "test/face.png") #CFD-AF-200-228-N.
     timesteps = int(os.getenv("timesteps", 10))
-    output_dir = os.getenv("output_dir", "test")
-
+    output_dir_orig = os.getenv("output_dir", "test/synth_voices_orig")
+    output_dir_gan = os.getenv("output_dir", "test/synth_voices_gan_min")
+    results_path = os.getenv("results_path", "evaluation")
     # SyncNet Configs
     syncnet_initw = float(os.getenv("syncnet_initw", 10.0))
     syncnet_initb = float(os.getenv("syncnet_initb", -5.0))
 
     resume_from = os.getenv("resume_from", "./ckpts/facetts_lrs3.pt")
+    #resume checkpoints from for inference
+    infr_resume_from_orig = os.getenv("infr_resume_from_orig", "/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/version_1156783/checkpoints/last.ckpt")
+    infr_resume_from_gan = os.getenv("infr_resume_from_gan", "/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/version_1113555/checkpoints/last.ckpt")
+
     val_check_interval = float(os.getenv("val_check_interval", 1.0))
     test_only = int(os.getenv("test_only", 0))
 
     # GAN-spezifische Hyperparameter
+    use_gan = int(os.getenv("use_gan", 1))  # 0 = False, 1 = True
     speaker_loss_weight = float(os.getenv("speaker_loss_weight", 0.1))
     lambda_adv = float(os.getenv("lambda_adv", 1.0))
     disc_learning_rate = float(os.getenv("disc_learning_rate", learning_rate))
     lReLU_slope = float(os.getenv("lReLU_slope", 0.2))
     use_spectral_norm = int(os.getenv("use_spectral_norm", 0)) # True: 1 / False: 0
     residual_channels = int(os.getenv("residual_channels", 256))
+    generated_audio_dir = os.getenv("generated_audio_dir", "/mnt/qb/work/butz/bst080/faceGANtts/test/synth_voices")
+    reference_audio_dir = os.getenv("reference_audio_dir", "/mnt/qb/work2/butz1/bst080/data/mvlrs_v1/lrs2_splitted/wav/test")
