@@ -20,12 +20,12 @@ class FaceTTSWithDiscriminator(FaceTTS):
         #self.feature_extractor = VoiceFeatureExtractor(_config)
 
         # Hyperparameters for adversarial training.
-        self.lambda_adv = _config.get("lambda_adv", 0.05)  # small adversarial weight initially
-        self.warmup_disc_epochs = _config.get("warmup_disc_epochs", 5)  # skip disc updates for these epochs
-        self.freeze_gen_epochs = _config.get("freeze_gen_epochs", 2)  # freeze generator for these epochs
+        self.lambda_adv = _config["lambda_adv"]  # small adversarial weight initially
+        self.warmup_disc_epochs = _config["warmup_disc_epochs"]  # skip disc updates for these epochs
+        self.freeze_gen_epochs = __config["freeze_gen_epochs"] # freeze generator for these epochs
         #self.adv_criterion = nn.BCEWithLogitsLoss()
-        self.disc_loss_type = _config.get("disc_loss_type", "bce")
-        self.speaker_loss_weight = _config.get("speaker_loss_weight", 0.01)
+        self.disc_loss_type = _config["disc_loss_type"]
+        self.speaker_loss_weight = _config["speaker_loss_weight"]
 
         # Loss-Funktion ggf. abhängig von disc_loss_type:
         if self.disc_loss_type == "bce":

@@ -104,23 +104,6 @@ def config():
     num_workers = int(os.getenv("num_workers", 2))  # Default is 2
     prefetch_factor = int(os.getenv("preftch_factor", 2))  # Default is 2
 
-    # Inference Configs
-    test_txt = os.getenv("test_txt", "test/text.txt")
-    use_custom = int(os.getenv("use_custom", 1))
-    test_faceimg = os.getenv("test_faceimg", "test/face.png") #CFD-AF-200-228-N.
-    timesteps = int(os.getenv("timesteps", 10))
-    output_dir_orig = os.getenv("output_dir", "test/synth_voices_orig")
-    output_dir_gan = os.getenv("output_dir", "test/synth_voices_gan_min")
-    results_path = os.getenv("results_path", "evaluation")
-    # SyncNet Configs
-    syncnet_initw = float(os.getenv("syncnet_initw", 10.0))
-    syncnet_initb = float(os.getenv("syncnet_initb", -5.0))
-
-    resume_from = os.getenv("resume_from", "./ckpts/facetts_lrs3.pt")
-
-    val_check_interval = float(os.getenv("val_check_interval", 1.0))
-    test_only = int(os.getenv("test_only", 0))
-
     # -----------------------------------------------------------------------------
     # GAN 
     # -----------------------------------------------------------------------------
@@ -139,9 +122,23 @@ def config():
     disc_loss_type = os.getenv("disc_loss_type", "bce")  # oder "mse", "hinge" 
     #speaker_loss_weight = float(os.getenv("speaker_loss_weight", 0.01))
     lambda_adv = float(os.getenv("lambda_adv", 0.01))
+    resume_from = os.getenv("resume_from", "./ckpts/facetts_lrs3.pt")
+
+    # Inference Configs
+    test_txt = os.getenv("test_txt", "test/text.txt")
+    use_custom = int(os.getenv("use_custom", 1))
+    test_faceimg = os.getenv("test_faceimg", "test/face.png") #CFD-AF-200-228-N.
+    timesteps = int(os.getenv("timesteps", 10))
+    output_dir_orig = os.getenv("output_dir", "test/synth_voices_orig")
+    output_dir_gan = os.getenv("output_dir", "test/synth_voices_gan_denoising")
+    results_path = os.getenv("results_path", "evaluation")
+    # SyncNet Configs
+    syncnet_initw = float(os.getenv("syncnet_initw", 10.0))
+    syncnet_initb = float(os.getenv("syncnet_initb", -5.0))
 
     #resume checkpoints from for inference
     infr_resume_from_orig = os.getenv("infr_resume_from_orig", "/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/facetts_original/checkpoints/last.ckpt")
-    infr_resume_from_gan = os.getenv("infr_resume_from_gan", "/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/gan_fm_false/checkpoints/epoch=45-step=8004.ckpt")
-    generated_audio_dir = os.getenv("generated_audio_dir", "/mnt/qb/work/butz/bst080/faceGANtts/test/synth_voices_fmfalse")
-    reference_audio_dir = os.getenv("reference_audio_dir", "/mnt/qb/work2/butz1/bst080/data/mvlrs_v1/lrs2_splitted/wav/test")
+    infr_resume_from_gan = os.getenv("infr_resume_from_gan", "/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/version_1176401/checkpoints/epoch=23-step=3956.ckpt") #/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/gan_fm_false/checkpoints/epoch=45-step=8004.ckpt
+
+    val_check_interval = float(os.getenv("val_check_interval", 1.0))
+    test_only = int(os.getenv("test_only", 0))
