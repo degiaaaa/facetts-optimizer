@@ -10,28 +10,38 @@ class SpectrogramDiscriminator(pl.LightningModule):
     def __init__(self, _config):
         super(SpectrogramDiscriminator, self).__init__()
         self.config = _config
-        self.LRELU_SLOPE = _config["lReLU_slope"]
+        self.LRELU_SLOPE = _config["disc_lrelu_slope"]
         self.multi_speaker = _config["multi_spks"]
         self.residual_channels = _config["residual_channels"]
         self.use_spectral_norm = _config["use_spectral_norm"]
+        self.base_channels = _config["disc_base_channels"]
+        self.num_layers = _config["disc_num_layers"]
+
         norm_f = (weight_norm if self.use_spectral_norm else spectral_norm)
 
-        self.conv_prev = norm_f(nn.Conv2d(1, 32, (3, 9), padding=(1, 4)))
-        self.convs = nn.ModuleList(
-            [
-                norm_f(nn.Conv2d(32, 32, (3, 9), stride=(1, 2), padding=(1, 4))),
-                norm_f(nn.Conv2d(32, 32, (3, 9), stride=(1, 2), padding=(1, 4))),
-                norm_f(nn.Conv2d(32, 32, (3, 9), stride=(1, 2), padding=(1, 4))),
-            ]
-        )
+        self.conv_prev = norm_f(nn.Conv2d(1, self.base_channels, (3, 9), padding=(1, 4)))
+
+
+        # self.convs = nn.ModuleList(
+        #     [
+        #         norm_f(nn.Conv2d(self.base_channels, self.base_channels, (3, 9), stride=(1, 2), padding=(1, 4))),
+        #         norm_f(nn.Conv2d(self.base_channels, self.base_channels, (3, 9), stride=(1, 2), padding=(1, 4))),
+        #         norm_f(nn.Conv2d(self.base_channels, self.base_channels, (3, 9), stride=(1, 2), padding=(1, 4))),
+        #     ]
+        # )
+        self.convs = nn.ModuleList()
+        for i in range(self.num_layers):
+            self.convs.append(
+                norm_f(nn.Conv2d(self.base_channels, self.base_channels, (3, 9), stride=(1, 2), padding=(1, 4)))
+                )
 
         if self.multi_speaker:
             self.spk_mlp = nn.Sequential(norm_f(nn.Linear(self.residual_channels, 32)))
 
         self.conv_post = nn.ModuleList(
             [
-                norm_f(nn.Conv2d(32, 32, (3, 3), padding=(1, 1))),
-                norm_f(nn.Conv2d(32, 1, (3, 3), padding=(1, 1))),
+                norm_f(nn.Conv2d(self.base_channels, self.base_channels, (3, 3), padding=(1, 1))),
+                norm_f(nn.Conv2d(self.base_channels, 1, (3, 3), padding=(1, 1))),
             ]
         )
 

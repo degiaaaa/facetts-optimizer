@@ -77,7 +77,7 @@ def config():
     ## Syncnet parameters
     syncnet_stride = int(os.getenv("syncnet_stride", 1))
     syncnet_ckpt = os.getenv("syncnet_ckpt")
-    spk_emb = os.getenv("spk_emb", "face")
+    spk_emb = os.getenv("spk_emb", "face") #or "speech"
 
     # Optimizer Configs
     optim_type = os.getenv("optim_type", "adam")
@@ -117,20 +117,31 @@ def config():
     syncnet_initb = float(os.getenv("syncnet_initb", -5.0))
 
     resume_from = os.getenv("resume_from", "./ckpts/facetts_lrs3.pt")
-    #resume checkpoints from for inference
-    infr_resume_from_orig = os.getenv("infr_resume_from_orig", "/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/version_1156783/checkpoints/last.ckpt")
-    infr_resume_from_gan = os.getenv("infr_resume_from_gan", "/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/version_1113555/checkpoints/last.ckpt")
 
     val_check_interval = float(os.getenv("val_check_interval", 1.0))
     test_only = int(os.getenv("test_only", 0))
 
-    # GAN-spezifische Hyperparameter
+    # -----------------------------------------------------------------------------
+    # GAN 
+    # -----------------------------------------------------------------------------
     use_gan = int(os.getenv("use_gan", 1))  # 0 = False, 1 = True
-    speaker_loss_weight = float(os.getenv("speaker_loss_weight", 0.1))
-    lambda_adv = float(os.getenv("lambda_adv", 1.0))
-    disc_learning_rate = float(os.getenv("disc_learning_rate", learning_rate))
+    disc_base_channels = int(os.getenv("disc_base_channels", 32))
+    disc_num_layers = int(os.getenv("disc_num_layers", 3))
+    disc_lrelu_slope = float(os.getenv("disc_lrelu_slope", 0.2))
+    disc_learning_rate = float(os.getenv("disc_learning_rate", 1e-6))
     lReLU_slope = float(os.getenv("lReLU_slope", 0.2))
     use_spectral_norm = int(os.getenv("use_spectral_norm", 0)) # True: 1 / False: 0
     residual_channels = int(os.getenv("residual_channels", 256))
-    generated_audio_dir = os.getenv("generated_audio_dir", "/mnt/qb/work/butz/bst080/faceGANtts/test/synth_voices")
+
+    warmup_disc_epochs = int(os.getenv("warmup_disc_epochs", 10))
+    freeze_gen_epochs = int(os.getenv("freeze_gen_epochs", 2))
+
+    disc_loss_type = os.getenv("disc_loss_type", "bce")  # oder "mse", "hinge" 
+    #speaker_loss_weight = float(os.getenv("speaker_loss_weight", 0.01))
+    lambda_adv = float(os.getenv("lambda_adv", 0.01))
+
+    #resume checkpoints from for inference
+    infr_resume_from_orig = os.getenv("infr_resume_from_orig", "/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/facetts_original/checkpoints/last.ckpt")
+    infr_resume_from_gan = os.getenv("infr_resume_from_gan", "/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/gan_fm_false/checkpoints/epoch=45-step=8004.ckpt")
+    generated_audio_dir = os.getenv("generated_audio_dir", "/mnt/qb/work/butz/bst080/faceGANtts/test/synth_voices_fmfalse")
     reference_audio_dir = os.getenv("reference_audio_dir", "/mnt/qb/work2/butz1/bst080/data/mvlrs_v1/lrs2_splitted/wav/test")

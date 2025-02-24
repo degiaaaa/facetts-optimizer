@@ -88,9 +88,12 @@ def main(_config):
 
             print(f"Generated Mel Shape: {mel_gen.shape}, Reference Mel Shape: {mel_ref.shape}")
 
-            if mel_gen.shape != mel_ref.shape:
-                print(f"⚠  Mismatch in Mel Spectrogram Shapes at index {idx}! Skipping this pair.")
-                continue  
+            # Ensure matching time dimension by truncation
+            min_length = min(mel_gen.shape[2], mel_ref.shape[2])
+            mel_gen = mel_gen[:, :, :min_length]
+            mel_ref = mel_ref[:, :, :min_length]
+
+            print(f"Generated Mel Shape: {mel_gen.shape}, Reference Mel Shape: {mel_ref.shape}")
 
             # Speaker Similarity using SyncNet
             spk_emb_gen = syncnet.forward_aud(mel_gen.unsqueeze(1).cuda())
@@ -114,17 +117,19 @@ def main(_config):
             # F0 Error Analysis
             snd_gen, snd_ref = parselmouth.Sound(gen_wav), parselmouth.Sound(ref_wav)
             f0_gen, f0_ref = snd_gen.to_pitch().selected_array['frequency'], snd_ref.to_pitch().selected_array['frequency']
-            f0_error = np.mean(np.abs(f0_gen - f0_ref))
+
+            min_length = min(len(f0_gen), len(f0_ref))
+            f0_error = np.mean(np.abs(f0_gen[:min_length] - f0_ref[:min_length]))
             f0_errors.append(f0_error)
 
             # Plot F0 curves for debugging
-            plt.figure(figsize=(10, 4))
-            plt.plot(f0_gen, label="Generated F0")
-            plt.plot(f0_ref, label="Reference F0")
-            plt.legend()
-            plt.title(f"F0 Comparison for Sample {idx}")
-            plt.savefig(os.path.join(plot_dir, f"f0_{idx}.png"))
-            plt.close()
+            # plt.figure(figsize=(10, 4))
+            # plt.plot(f0_gen, label="Generated F0")
+            # plt.plot(f0_ref, label="Reference F0")
+            # plt.legend()
+            # plt.title(f"F0 Comparison for Sample {idx}")
+            # plt.savefig(os.path.join(plot_dir, f"f0_{idx}.png"))
+            # plt.close()
 
             # MFCC Distance (DTW)
             mfcc_gen = torchaudio.functional.compute_deltas(mel_gen.mean(dim=0))

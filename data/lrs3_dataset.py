@@ -11,7 +11,10 @@ import numpy as np
 
 from text import text_to_sequence
 from text import symbols
+
+#NEW for LRS2 and ML-Cloud Cluster
 import time
+import noisereduce as nr
 
 
 class LRS3Dataset(torch.utils.data.Dataset):
@@ -64,6 +67,11 @@ class LRS3Dataset(torch.utils.data.Dataset):
         
         assert (sr == self.config["sample_rate"]), "sampling rate should be 16k."
         
+        #For LRS2 Data apply denoising
+        aud_np = aud.numpy()
+        aud_denoised = nr.reduce_noise(y=aud_np, sr=sr)
+        aud = torch.tensor(aud_denoised)
+
         aud = mel_spectrogram(
             aud,
             self.config["n_fft"],
