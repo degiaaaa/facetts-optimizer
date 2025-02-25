@@ -98,7 +98,7 @@ def config():
     #log_dir = os.getenv("CHECKPOINTS", "./logs")
     log_every_n_steps = int(os.getenv("log_every_n_steps", 1000))
 
-    num_gpus = int(os.getenv("num_gpus", 8)) #it was 1 -> 
+    num_gpus = int(os.getenv("num_gpus", 4)) #it was 1 -> 
     per_gpu_batchsize = int(batch_size / num_gpus)
     num_nodes = int(os.getenv("num_nodes", 1))
     num_workers = int(os.getenv("num_workers", 2))  # Default is 2
@@ -117,11 +117,14 @@ def config():
     residual_channels = int(os.getenv("residual_channels", 256))
 
     warmup_disc_epochs = int(os.getenv("warmup_disc_epochs", 10))
-    freeze_gen_epochs = int(os.getenv("freeze_gen_epochs", 2))
+    freeze_gen_epochs = int(os.getenv("freeze_gen_epochs", 0))
 
     disc_loss_type = os.getenv("disc_loss_type", "bce")  # oder "mse", "hinge" 
     #speaker_loss_weight = float(os.getenv("speaker_loss_weight", 0.01))
     lambda_adv = float(os.getenv("lambda_adv", 0.01))
+    micro_batch_size = int(os.getenv("micro_batch_size", 16))
+
+
     resume_from = os.getenv("resume_from", "./ckpts/facetts_lrs3.pt")
 
     # Inference Configs

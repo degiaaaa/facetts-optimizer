@@ -49,7 +49,7 @@ class SpectrogramDiscriminator(pl.LightningModule):
         print(f"[DEBUG] Initial x shape: {x.shape}")
         fmap = []
 
-       # x = x.unsqueeze(1)  # Add channel dimension
+        # x = x.unsqueeze(1)  # Add channel dimension
         x = self.conv_prev(x)
         print(f"[DEBUG] Shape after first Conv2D layer: {x.shape}")
         x = F.leaky_relu(x, self.LRELU_SLOPE)

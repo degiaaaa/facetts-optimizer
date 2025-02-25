@@ -9,4 +9,6 @@ lrs2_alignment/
 test/synth_voices/
 test/synth_voices_gan/
 test/synth_voices_gan_min/
+test/synth_voices_gan_denoising
+test/synth_voices_orig
 /mnt/qb/work/butz/bst080/faceGANtts/Miniconda3-latest-Linux-x86_64.sh

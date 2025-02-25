@@ -22,10 +22,10 @@ class FaceTTSWithDiscriminator(FaceTTS):
         # Hyperparameters for adversarial training.
         self.lambda_adv = _config["lambda_adv"]  # small adversarial weight initially
         self.warmup_disc_epochs = _config["warmup_disc_epochs"]  # skip disc updates for these epochs
-        self.freeze_gen_epochs = __config["freeze_gen_epochs"] # freeze generator for these epochs
+        self.freeze_gen_epochs = _config["freeze_gen_epochs"] # freeze generator for these epochs
         #self.adv_criterion = nn.BCEWithLogitsLoss()
         self.disc_loss_type = _config["disc_loss_type"]
-        self.speaker_loss_weight = _config["speaker_loss_weight"]
+        #self.speaker_loss_weight = _config["speaker_loss_weight"]
 
         # Loss-Funktion ggf. abhängig von disc_loss_type:
         if self.disc_loss_type == "bce":

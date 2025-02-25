@@ -45,9 +45,11 @@ def main(_config):
     f_max = _config["f_max"]
 
     # Paths for evaluation data
-    generated_audio_dir = "/mnt/qb/work/butz/bst080/faceGANtts/test/synth_voices_gan"
-    reference_audio_dir = "/mnt/qb/work2/butz1/bst080/data/mvlrs_v1/lrs2_splitted/wav/test"
-
+    # generated_audio_dir = "/mnt/qb/work/butz/bst080/faceGANtts/test/synth_voices_gan"
+    # reference_audio_dir = "/mnt/qb/work2/butz1/bst080/data/mvlrs_v1/lrs2_splitted/wav/test"
+    generated_audio_dir = _config.get("output_dir_gan")
+    reference_audio_dir = _config.get("output_dir_orig")
+    
     # Create output directory for plots
     plot_dir = "eval_plots"
     os.makedirs(plot_dir, exist_ok=True)
