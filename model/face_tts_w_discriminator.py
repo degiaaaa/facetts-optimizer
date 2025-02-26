@@ -23,9 +23,8 @@ class FaceTTSWithDiscriminator(FaceTTS):
         self.lambda_adv = _config["lambda_adv"]  # small adversarial weight initially
         self.warmup_disc_epochs = _config["warmup_disc_epochs"]  # skip disc updates for these epochs
         self.freeze_gen_epochs = _config["freeze_gen_epochs"] # freeze generator for these epochs
-        #self.adv_criterion = nn.BCEWithLogitsLoss()
         self.disc_loss_type = _config["disc_loss_type"]
-        #self.speaker_loss_weight = _config["speaker_loss_weight"]
+        self.speaker_loss_weight = _config["speaker_loss_weight"]
 
         # Loss-Funktion ggf. abhängig von disc_loss_type:
         if self.disc_loss_type == "bce":
@@ -155,10 +154,10 @@ class FaceTTSWithDiscriminator(FaceTTS):
                 dur_loss, prior_loss, diff_loss, spk_loss = self.compute_loss(
                     x_mini, x_len_mini, y_mini, y_len_mini, spk=spk_mini
                 )
-                #spk_loss_weighted = self.speaker_loss_weight * spk_loss
+                
 
                 # Combine all losses.
-                g_loss = (self.lambda_adv * adv_loss) + dur_loss + prior_loss + diff_loss  + spk_loss #spk_loss_weighted
+                g_loss = (self.lambda_adv * adv_loss) + dur_loss + prior_loss + diff_loss  + (self.speaker_loss_weight * spk_loss)
             self.manual_backward(g_loss / n_micro_batches_gen)
             total_g_loss += g_loss.item()
         opt_gen.step()

@@ -42,17 +42,6 @@ def config():
     f_min = float(os.getenv("f_min", 0.0))
     f_max = float(os.getenv("f_max", 8000))
     n_mels = int(os.getenv("n_mels", 128))
-
-
-    # Experiment Configs
-    batch_size = int(os.getenv("batch_size", 256)) #it was 256 #if gpu =4 -> 256%4 // For batch_size=64 no cuda out memory for gan
-    add_blank = int(os.getenv("add_blank", 1))  # True: 1 / False: 0
-    snet_emb = int(os.getenv("snet_emb", 1))  # True: 1 / False: 0
-    n_spks = int(os.getenv("n_spks", 2007))  # libritts:247, lrs3: 2007
-    multi_spks = int(os.getenv("multi_spks", 1))
-    out_size = fix_len_compatibility(2 * sample_rate // 256)
-    model = os.getenv("model", "face-tts")
-
     # Network Configs
 
     ## Encoder parameters
@@ -79,6 +68,16 @@ def config():
     syncnet_ckpt = os.getenv("syncnet_ckpt")
     spk_emb = os.getenv("spk_emb", "face") #or "speech"
 
+    # Experiment Configs
+    batch_size = int(os.getenv("batch_size", 256)) #it was 256 #if gpu =4 -> 256%4 // For batch_size=64 no cuda out memory for gan
+    add_blank = int(os.getenv("add_blank", 1))  # True: 1 / False: 0
+    snet_emb = int(os.getenv("snet_emb", 1))  # True: 1 / False: 0
+    n_spks = int(os.getenv("n_spks", 2007))  # libritts:247, lrs3: 2007
+    multi_spks = int(os.getenv("multi_spks", 1))
+    out_size = fix_len_compatibility(2 * sample_rate // 256)
+    #model = os.getenv("model", "face-tts")
+    gamma = os.getenv("gamma", 0.1)
+
     # Optimizer Configs
     optim_type = os.getenv("optim_type", "adam")
     schedule_type = os.getenv("schedule_type", "constant")
@@ -103,7 +102,6 @@ def config():
     num_nodes = int(os.getenv("num_nodes", 1))
     num_workers = int(os.getenv("num_workers", 2))  # Default is 2
     prefetch_factor = int(os.getenv("preftch_factor", 2))  # Default is 2
-
     # -----------------------------------------------------------------------------
     # GAN 
     # -----------------------------------------------------------------------------
@@ -120,14 +118,13 @@ def config():
     freeze_gen_epochs = int(os.getenv("freeze_gen_epochs", 0))
 
     disc_loss_type = os.getenv("disc_loss_type", "bce")  # oder "mse", "hinge" 
-    #speaker_loss_weight = float(os.getenv("speaker_loss_weight", 0.01))
+    speaker_loss_weight = float(os.getenv("speaker_loss_weight", 0.01))
     lambda_adv = float(os.getenv("lambda_adv", 0.01))
     micro_batch_size = int(os.getenv("micro_batch_size", 16))
 
 
-    resume_from = os.getenv("resume_from", "./ckpts/facetts_lrs3.pt")
-
     # Inference Configs
+    resume_from = os.getenv("resume_from", "./ckpts/facetts_lrs3.pt")
     test_txt = os.getenv("test_txt", "test/text.txt")
     use_custom = int(os.getenv("use_custom", 1))
     test_faceimg = os.getenv("test_faceimg", "test/face.png") #CFD-AF-200-228-N.

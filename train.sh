@@ -5,8 +5,8 @@
 #SBATCH --gres=gpu:4
 #SBATCH --mem=50G                # Amount of memory
 #SBATCH --time=3-00:00:00       # Maximum runtime
-#SBATCH --output=train_gan_den_lr6_adv01_warmup10-%j.out #gan_den_lr6_adv01_warmup10
-#SBATCH --error=train_gan_den_lr6_adv01_warmup10-%j.err
+#SBATCH --output=train_gan_den_lr6_adv01_warmup10_gamma1-%j.out #gan_den_lr6_adv01_warmup10
+#SBATCH --error=train_gan_den_lr6_adv01_warmup10_gamma1-%j.err
 #SBATCH --mail-type=END,FAIL       # Notify when job ends or fails
 #SBATCH --mail-user=debie1997@yahoo.de  # Your email address
 

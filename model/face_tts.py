@@ -237,7 +237,7 @@ class FaceTTS(pl.LightningModule):
             dur_loss,
             prior_loss,
             diff_loss,
-            0.01 * spk_loss,
+            self.config["gamma"]  * spk_loss,
         )
 
     def training_step(self, batch, batch_idx):

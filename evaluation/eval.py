@@ -146,15 +146,8 @@ def main(_config):
             # STFT Distance
             stft_dist = torch.norm(mel_gen - mel_ref, p='fro').item()
             stft_distances.append(stft_dist)
-
-    # Compute and print final results
-    print("\n######## Evaluation Results ########")
-    print(f"Mean Speaker Similarity: {np.mean(speaker_similarities):.4f}")
-    print(f"Mean F0 Error: {np.mean(f0_errors):.4f}")
-    print(f"Mean MCD: {np.mean(mcd_values):.4f}")
-    print(f"Mean STFT Distance: {np.mean(stft_distances):.4f}")
-
-    # Save plots for debugging
+            
+    # Speichere Debug-Plots (wie bereits vorhanden)
     plt.figure()
     plt.hist(f0_errors, bins=30, alpha=0.7, label="F0 Errors")
     plt.legend()
@@ -166,3 +159,18 @@ def main(_config):
     plt.legend()
     plt.savefig(os.path.join(plot_dir, "stft_error_histogram.png"))
     plt.close()
+
+    # Ausgabe der Mittelwerte
+    print("\n######## Evaluation Results ########")
+    print(f"Mean Speaker Similarity: {np.mean(speaker_similarities):.4f}")
+    print(f"Mean F0 Error: {np.mean(f0_errors):.4f}")
+    print(f"Mean MCD: {np.mean(mcd_values):.4f}")
+    print(f"Mean STFT Distance: {np.mean(stft_distances):.4f}")
+
+    # --- Hier den Composite Score berechnen und ausgeben ---
+    mean_speaker_similarity = np.mean(speaker_similarities)
+    mean_f0_error = np.mean(f0_errors)
+    mean_mcd = np.mean(mcd_values)
+    mean_stft_distance = np.mean(stft_distances)
+    composite = mean_f0_error + mean_mcd + (0.01 * mean_stft_distance) - (10 * mean_speaker_similarity)
+    print(f"Composite Metric: {composite:.4f}")

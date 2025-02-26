@@ -1,0 +1,60 @@
+{
+  "optimization_procedure_name": "hp_optimization",
+  "results_dir": "/mnt/qb/work/butz/bst080/faceGANtts/hp_results/run_$(date +%Y%m%d_%H%M%S)",
+  "script_relative_path": "hyperopt.py",
+  "disable_interactive_checks": true,
+  "run_in_working_dir": true,
+  "run_command": "python hyperopt.py",
+  "metric_regex": "Composite Metric:\\s*([\\d.-]+)",
+  "environment_setup": {
+      "use_conda": true,
+      "conda_env": "/mnt/qb/work2/butz1/bst080/miniconda3/envs/train_env",
+      "additional_setup": [
+          "export CUDA_VISIBLE_DEVICES=0,1,2,3"
+      ]
+  },
+  "cluster_requirements": {
+      "request_cpus": 4,
+      "request_gpus": 4,
+      "memory_in_mb": 50000,
+      "partition": "2080-galvani",
+      "request_time": "3-00:00:00"
+  },
+  "fixed_params": {},
+  "optimizer_str": "cem_metaoptimizer",
+  "optimizer_settings": {
+        "with_restarts": true,
+        "num_jobs_in_elite": 5
+    },
+  "num_best_jobs_whose_data_is_kept": 5,
+  "optimized_params": [
+    {"param": "batch_size", "distribution": "Discrete", "options": [64, 128, 256]},
+    {"param": "add_blank", "distribution": "Discrete", "options": [0, 1]},
+    {"param": "snet_emb", "distribution": "Discrete", "options": [0, 1]},
+    {"param": "n_spks", "distribution": "Discrete", "options": [247, 2007]},
+    {"param": "multi_spks", "distribution": "Discrete", "options": [0, 1]},
+    {"param": "gamma", "distribution": "TruncatedLogNormal", "bounds": [0.01, 0.5]},
+    {"param": "use_gan", "distribution": "Discrete", "options": [0, 1]},
+    {"param": "disc_base_channels", "distribution": "Discrete", "options": [16, 32, 64]},
+    {"param": "disc_num_layers", "distribution": "Discrete", "options": [2, 3, 4]},
+    {"param": "disc_lrelu_slope", "distribution": "TruncatedNormal", "bounds": [0.1, 0.3]},
+    {"param": "disc_learning_rate", "distribution": "TruncatedLogNormal", "bounds": [1e-6, 1e-4]},
+    {"param": "lReLU_slope", "distribution": "TruncatedNormal", "bounds": [0.1, 0.3]},
+    {"param": "use_spectral_norm", "distribution": "Discrete", "options": [0, 1]},
+    {"param": "residual_channels", "distribution": "Discrete", "options": [128, 256, 512]},
+    {"param": "warmup_disc_epochs", "distribution": "Discrete", "options": [5, 10, 15]},
+    {"param": "freeze_gen_epochs", "distribution": "Discrete", "options": [0, 5, 10]},
+    {"param": "disc_loss_type", "distribution": "Discrete", "options": ["bce", "mse", "hinge"]},
+    {"param": "speaker_loss_weight", "distribution": "TruncatedLogNormal", "bounds": [0.001, 0.1]},
+    {"param": "lambda_adv", "distribution": "TruncatedLogNormal", "bounds": [0.001, 0.1]},
+    {"param": "micro_batch_size", "distribution": "Discrete", "options": [8, 16, 32]}
+],
+  "optimization_setting": {
+        "number_of_samples": 20,
+        "run_local": false,
+        "n_jobs_per_iteration": 4,
+        "n_completed_jobs_before_resubmit": 3,
+        "metric_to_optimize": "Composite Metric",
+        "minimize": true
+    }
+}
