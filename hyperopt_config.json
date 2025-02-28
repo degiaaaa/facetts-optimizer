@@ -1,6 +1,6 @@
 {
   "optimization_procedure_name": "hp_optimization",
-  "results_dir": "/mnt/qb/work/butz/bst080/faceGANtts/hp_results/run_$(date +%Y%m%d_%H%M%S)",
+  "results_dir": "/mnt/qb/work/butz/bst080/faceGANtts/hp_results/run_0",
   "script_relative_path": "hyperopt.py",
   "disable_interactive_checks": true,
   "run_in_working_dir": true,
@@ -17,8 +17,13 @@
       "request_cpus": 4,
       "request_gpus": 4,
       "memory_in_mb": 50000,
-      "partition": "2080-galvani",
+      "partition": "a100-galvani",
       "request_time": "3-00:00:00"
+  },
+  "git_params": {
+    "url": "git@github.com:degiaaaa/facetts-optimizer.git",
+    "branch": "main",
+    "commit": "latest"
   },
   "fixed_params": {},
   "optimizer_str": "cem_metaoptimizer",
@@ -50,11 +55,12 @@
     {"param": "micro_batch_size", "distribution": "Discrete", "options": [8, 16, 32]}
 ],
   "optimization_setting": {
-        "number_of_samples": 20,
+        "number_of_samples": 40,
         "run_local": false,
         "n_jobs_per_iteration": 4,
         "n_completed_jobs_before_resubmit": 3,
         "metric_to_optimize": "Composite Metric",
         "minimize": true
+
     }
 }

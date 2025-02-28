@@ -85,6 +85,15 @@ class FaceTTSWithDiscriminator(FaceTTS):
         spk = batch['spk'].to(self.device)
         B = x.shape[0]
 
+        # Debugging Statements
+        print(f"[DEBUG] Batch {batch_idx} - x.shape: {x.shape}, y.shape: {y.shape}, spk.shape: {spk.shape}")
+        print(f"[DEBUG] x_len: {x_len}, y_len: {y_len}")
+
+        # Check für ungültige Werte
+        if torch.any(y_len < 0) or torch.any(torch.isnan(y_len)):
+            print(f"[ERROR] Ungültige y_lengths entdeckt: {y_len}")
+            raise ValueError("y_lengths enthält ungültige Werte!")
+
         # Get microbatch sizes (defined unconditionally)
         micro_batch_size = self.config.get("micro_batch_size", 16)
         micro_batch_size_gen = self.config.get("micro_batch_size_gen", micro_batch_size)
@@ -93,6 +102,10 @@ class FaceTTSWithDiscriminator(FaceTTS):
 
         # Get optimizers.
         opt_gen, opt_disc = self.optimizers()
+
+        # DEBUG: Prüfe, ob Discriminator nach Warmup aktiv wird
+        if self.current_epoch == self.warmup_disc_epochs:
+            print(f"[DEBUG] Discriminator wird jetzt aktiv! Epoch: {self.current_epoch}")
 
         # Determine whether to update the discriminator based on a warm-up.
         train_disc = self.current_epoch >= self.warmup_disc_epochs
@@ -115,6 +128,8 @@ class FaceTTSWithDiscriminator(FaceTTS):
                     with torch.no_grad():
                         _, dec_out, _ = self.forward(x_mini, x_len_mini, self.config['timesteps'], spk=spk_mini)
                     fake_mel = dec_out[-1]
+
+                    print(f"[DEBUG] Fake Mel shape: {fake_mel.shape}")
                     # Run discriminator on real and fake.
                     _, real_logits = self.discriminator(y_mini.unsqueeze(1))
                     _, fake_logits = self.discriminator(fake_mel.detach().unsqueeze(1))
@@ -125,6 +140,7 @@ class FaceTTSWithDiscriminator(FaceTTS):
                 total_d_loss += d_loss.item()
             opt_disc.step()
             avg_d_loss = total_d_loss
+            print(f"[DEBUG] Batch {batch_idx} -> Discriminator Loss: {avg_d_loss}")
         else:
             avg_d_loss = 0.0
 
@@ -166,6 +182,7 @@ class FaceTTSWithDiscriminator(FaceTTS):
         # Log step and epoch metrics.
         self.log("train/d_loss_step", avg_d_loss, prog_bar=True, on_step=True, on_epoch=False)
         self.log("train/g_loss_step", avg_g_loss, prog_bar=True, on_step=True, on_epoch=False)
+
         if (batch_idx + 1) == len(self.trainer.datamodule.train_dataloader()):
             self.log("train/d_loss_epoch", avg_d_loss, prog_bar=True, on_step=False, on_epoch=True)
             self.log("train/g_loss_epoch", avg_g_loss, prog_bar=True, on_step=False, on_epoch=True)

@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH -J train_gan
-#SBATCH --partition=a100-fat-galvani #2080-galvani #a100-fat-galvani  #a100-galvani
+#SBATCH --partition=a100-galvani #2080-galvani #a100-fat-galvani  #a100-galvani
 #SBATCH --ntasks-per-node=4
 #SBATCH --gres=gpu:4
 #SBATCH --mem=50G                # Amount of memory
 #SBATCH --time=3-00:00:00       # Maximum runtime
-#SBATCH --output=train_gan_den_lr6_adv01_warmup10_gamma1-%j.out #gan_den_lr6_adv01_warmup10
-#SBATCH --error=train_gan_den_lr6_adv01_warmup10_gamma1-%j.err
+#SBATCH --output=train_gan_den_lr6_adv01_warmup0_gamma1_maxlenfix-%j.out #gan_den_lr6_adv01_warmup10
+#SBATCH --error=train_gan_den_lr6_adv01_warmup0_gamma1_maxlenfix-%j.err
 #SBATCH --mail-type=END,FAIL       # Notify when job ends or fails
 #SBATCH --mail-user=debie1997@yahoo.de  # Your email address
 

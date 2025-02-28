@@ -114,7 +114,7 @@ def config():
     use_spectral_norm = int(os.getenv("use_spectral_norm", 0)) # True: 1 / False: 0
     residual_channels = int(os.getenv("residual_channels", 256))
 
-    warmup_disc_epochs = int(os.getenv("warmup_disc_epochs", 10))
+    warmup_disc_epochs = int(os.getenv("warmup_disc_epochs", 0))
     freeze_gen_epochs = int(os.getenv("freeze_gen_epochs", 0))
 
     disc_loss_type = os.getenv("disc_loss_type", "bce")  # oder "mse", "hinge" 
