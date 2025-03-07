@@ -13,8 +13,5 @@ scontrol show job $SLURM_JOB_ID
 # Initialize conda
 source /mnt/qb/work2/butz1/bst080/miniconda3/etc/profile.d/conda.sh
 
-# Activate the environment
-#conda activate label_env
-conda activate /mnt/qb/work2/butz1/bst080/miniconda3/envs/label_env  #/mnt/qb/home/butz/bst080/miniconda3/envs/label_env
-
 srun conda run -p /mnt/qb/work2/butz1/bst080/miniconda3/envs/label_env python /mnt/qb/work/butz/bst080/faceGANtts/data/lrs2_preprocessing/labeling.py 
+#srun conda run -p /mnt/qb/work2/butz1/bst080/miniconda3/envs/train_env python /mnt/qb/work/butz/bst080/faceGANtts/data/lrs2_preprocessing/count_speaker.py
