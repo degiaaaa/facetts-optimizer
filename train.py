@@ -104,7 +104,8 @@ def main(_config):
         strategy=DDPStrategy(gradient_as_bucket_view=True, find_unused_parameters=True),
         max_steps=max_steps,
         callbacks=callbacks,
-        accumulate_grad_batches=grad_steps,
+        #detect_anomaly=True,
+        accumulate_grad_batches= grad_steps, #is 1, only used for original FACETTS training not for GAN
         log_every_n_steps=50,
         enable_model_summary=True,
         val_check_interval=_config["val_check_interval"],

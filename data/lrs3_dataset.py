@@ -69,7 +69,7 @@ class LRS3Dataset(torch.utils.data.Dataset):
         
         #For LRS2 Data apply denoising
         aud_np = aud.numpy()
-        aud_denoised = nr.reduce_noise(y=aud_np, sr=sr)
+        aud_denoised = nr.reduce_noise(y=aud_np, sr=sr, prop_decrease=self.config["denoise_factor"])
         aud = torch.tensor(aud_denoised)
 
         aud = mel_spectrogram(

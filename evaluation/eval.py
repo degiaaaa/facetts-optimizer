@@ -45,11 +45,9 @@ def main(_config):
     f_max = _config["f_max"]
 
     # Paths for evaluation data
-    # generated_audio_dir = "/mnt/qb/work/butz/bst080/faceGANtts/test/synth_voices_gan"
-    # reference_audio_dir = "/mnt/qb/work2/butz1/bst080/data/mvlrs_v1/lrs2_splitted/wav/test"
-    generated_audio_dir = _config.get("output_dir_gan")
-    reference_audio_dir = _config.get("output_dir_orig")
-    
+    generated_audio_dir = _config.get("output_dir_orig")
+    reference_audio_dir = _config.get("ground_truth_dir")
+
     # Create output directory for plots
     plot_dir = "eval_plots"
     os.makedirs(plot_dir, exist_ok=True)
@@ -146,8 +144,8 @@ def main(_config):
             # STFT Distance
             stft_dist = torch.norm(mel_gen - mel_ref, p='fro').item()
             stft_distances.append(stft_dist)
-            
-    # Speichere Debug-Plots (wie bereits vorhanden)
+
+    # Save plots for debugging
     plt.figure()
     plt.hist(f0_errors, bins=30, alpha=0.7, label="F0 Errors")
     plt.legend()
@@ -160,17 +158,17 @@ def main(_config):
     plt.savefig(os.path.join(plot_dir, "stft_error_histogram.png"))
     plt.close()
 
-    # Ausgabe der Mittelwerte
-    print("\n######## Evaluation Results ########")
-    print(f"Mean Speaker Similarity: {np.mean(speaker_similarities):.4f}")
-    print(f"Mean F0 Error: {np.mean(f0_errors):.4f}")
-    print(f"Mean MCD: {np.mean(mcd_values):.4f}")
-    print(f"Mean STFT Distance: {np.mean(stft_distances):.4f}")
-
     # --- Hier den Composite Score berechnen und ausgeben ---
     mean_speaker_similarity = np.mean(speaker_similarities)
     mean_f0_error = np.mean(f0_errors)
     mean_mcd = np.mean(mcd_values)
     mean_stft_distance = np.mean(stft_distances)
     composite = mean_f0_error + mean_mcd + (0.01 * mean_stft_distance) - (10 * mean_speaker_similarity)
+    
+    # Compute and print final results
+    print("\n######## Evaluation Results ########")
+    print(f"Mean Speaker Similarity: {mean_speaker_similarity:.4f}")
+    print(f"Mean F0 Error: {mean_f0_error:.4f}")
+    print(f"Mean MCD: {mean_mcd:.4f}")
+    print(f"Mean STFT Distance: {mean_stft_distance:.4f}")
     print(f"Composite Metric: {composite:.4f}")

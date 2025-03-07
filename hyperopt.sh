@@ -1,28 +1,23 @@
 #!/bin/bash
 #SBATCH -J hyperopt_job
-#SBATCH --partition=2080-galvani
+#SBATCH --partition=a100-galvani
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:4
 #SBATCH --mem=50G
 #SBATCH --time=3-00:00:00
 #SBATCH --output=hyperopt-%j.out
 #SBATCH --error=hyperopt-%j.err
-#SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=debie1997@yahoo.de
 
-# Load necessary modules
+# 1. Conda korrekt initialisieren
 source /mnt/qb/work2/butz1/bst080/miniconda3/etc/profile.d/conda.sh
+
+# 2. Conda-Umgebung mit vollem Pfad aktivieren
 conda activate /mnt/qb/work2/butz1/bst080/miniconda3/envs/train_env
 
-# Set cache directory
-# export CLUSTER_UTILS_CACHE_DIR=./.cache_cluster_utils
-# rm -rf $CLUSTER_UTILS_CACHE_DIR
-export CLUSTER_UTILS_DISABLE_INTERACTION=1
-export PYTHONUNBUFFERED=1
-export PYTHONWARNINGS="ignore"
-export TERM=dumb
-export DEBIAN_FRONTEND=noninteractive
-# Starte die Hyperparameter-Optimierung und liefere automatisch die Bestätigung "y"
-srun --unbuffered python -m cluster_utils.hp_optimization hyperopt_config.json
+# 3. Ergebnisse-Ordner löschen (wichtig für Neustarts)
+RESULTS_DIR="/mnt/qb/work/butz/bst080/faceGANtts/hp_results/run_0"
+rm -rf "$RESULTS_DIR"
+mkdir -p "$RESULTS_DIR"
 
+# Führe aus OHNE Terminal-Emulation
+srun --unbuffered python -u hyperopt.py hyperopt_config.json < /dev/null

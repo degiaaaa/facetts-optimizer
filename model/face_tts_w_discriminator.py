@@ -24,7 +24,6 @@ class FaceTTSWithDiscriminator(FaceTTS):
         self.warmup_disc_epochs = _config["warmup_disc_epochs"]  # skip disc updates for these epochs
         self.freeze_gen_epochs = _config["freeze_gen_epochs"] # freeze generator for these epochs
         self.disc_loss_type = _config["disc_loss_type"]
-        self.speaker_loss_weight = _config["speaker_loss_weight"]
 
         # Loss-Funktion ggf. abhängig von disc_loss_type:
         if self.disc_loss_type == "bce":
@@ -91,8 +90,8 @@ class FaceTTSWithDiscriminator(FaceTTS):
 
         # Check für ungültige Werte
         if torch.any(y_len < 0) or torch.any(torch.isnan(y_len)):
-            print(f"[ERROR] Ungültige y_lengths entdeckt: {y_len}")
-            raise ValueError("y_lengths enthält ungültige Werte!")
+            print(f"[ERROR] contains nan-values: {y_len}")
+            raise ValueError("y_lengths contains nan-values!")
 
         # Get microbatch sizes (defined unconditionally)
         micro_batch_size = self.config.get("micro_batch_size", 16)
@@ -105,13 +104,14 @@ class FaceTTSWithDiscriminator(FaceTTS):
 
         # DEBUG: Prüfe, ob Discriminator nach Warmup aktiv wird
         if self.current_epoch == self.warmup_disc_epochs:
-            print(f"[DEBUG] Discriminator wird jetzt aktiv! Epoch: {self.current_epoch}")
+            print(f"[DEBUG] Discriminator will be activated! Epoch: {self.current_epoch}")
 
         # Determine whether to update the discriminator based on a warm-up.
         train_disc = self.current_epoch >= self.warmup_disc_epochs
 
         ### Discriminator Update ###
         if train_disc:
+            #zero out the gradients to prevent mixing gradients from previous iterations
             opt_disc.zero_grad()
             total_d_loss = 0.0
             for i in range(n_micro_batches):
@@ -132,11 +132,14 @@ class FaceTTSWithDiscriminator(FaceTTS):
                     print(f"[DEBUG] Fake Mel shape: {fake_mel.shape}")
                     # Run discriminator on real and fake.
                     _, real_logits = self.discriminator(y_mini.unsqueeze(1))
-                    _, fake_logits = self.discriminator(fake_mel.detach().unsqueeze(1))
+                    _, fake_logits = self.discriminator(fake_mel.detach().unsqueeze(1)) #fake not recorded to gradient computation (detach)
                     loss_real = self.adv_criterion(real_logits, torch.ones_like(real_logits))
                     loss_fake = self.adv_criterion(fake_logits, torch.zeros_like(fake_logits))
                     d_loss = 0.5 * (loss_real + loss_fake)
-                self.manual_backward(d_loss / n_micro_batches)
+                    # # 🛠 Histogram-Logging für den Discriminator
+                    # self.logger.experiment.add_histogram("Discriminator/Real_Logits", real_logits.detach().cpu(), self.global_step)
+                    # self.logger.experiment.add_histogram("Discriminator/Fake_Logits", fake_logits.detach().cpu(), self.global_step)
+                self.manual_backward(d_loss / n_micro_batches)  # Accumulate gradients
                 total_d_loss += d_loss.item()
             opt_disc.step()
             avg_d_loss = total_d_loss
@@ -166,6 +169,10 @@ class FaceTTSWithDiscriminator(FaceTTS):
                 else:
                     adv_loss = torch.tensor(0.0, device=self.device)
 
+                # # 🛠 Logging für adversarialen Verlust und lambda_adv
+                # self.log("train/adv_loss", adv_loss.item(), prog_bar=True, on_step=True, on_epoch=False)
+                # self.log("train/lambda_adv", self.lambda_adv, prog_bar=True, on_step=False, on_epoch=True)
+
                 # Compute the original FaceTTS losses.
                 dur_loss, prior_loss, diff_loss, spk_loss = self.compute_loss(
                     x_mini, x_len_mini, y_mini, y_len_mini, spk=spk_mini
@@ -173,8 +180,8 @@ class FaceTTSWithDiscriminator(FaceTTS):
                 
 
                 # Combine all losses.
-                g_loss = (self.lambda_adv * adv_loss) + dur_loss + prior_loss + diff_loss  + (self.speaker_loss_weight * spk_loss)
-            self.manual_backward(g_loss / n_micro_batches_gen)
+                g_loss = (self.lambda_adv * adv_loss) + dur_loss + prior_loss + diff_loss  + (spk_loss)
+            self.manual_backward(g_loss / n_micro_batches_gen)  # Accumulate gradients
             total_g_loss += g_loss.item()
         opt_gen.step()
         avg_g_loss = total_g_loss
@@ -189,5 +196,31 @@ class FaceTTSWithDiscriminator(FaceTTS):
 
         print(f"[DEBUG] Discriminator Loss (avg): {avg_d_loss}")
         print(f"[DEBUG] Generator Loss (avg): {avg_g_loss}")
+
+        #return {"d_loss": avg_d_loss, "g_loss": avg_g_loss}
+        # # --- Monitoring: Zusätzliche Debug-/Monitoring-Ausgaben ---
+        # # Hier loggen wir y_lengths, y_max_length und y_max_length_.
+        # with torch.no_grad():
+        #     # Für Monitoring verwenden wir den ersten Sample der Charge:
+        #     _, _, attn = self.forward(x[:1], x_len[:1], self.config['timesteps'], spk=spk[:1])
+        #     # Erneute Berechnung (wie in forward) für y_lengths, y_max_length und y_max_length_:
+        #     mu_x, logw, x_mask = self.encoder(x[:1], x_len[:1], spk[:1])
+        #     w = torch.exp(logw) * x_mask
+        #     w_ceil = torch.ceil(w) * self.config.get("length_scale", 1.0)
+        #     y_lengths = torch.clamp_min(torch.sum(w_ceil, [1, 2]), 1).long()
+        #     y_max_length = int(y_lengths.max())
+        #     from model.utils import fix_len_compatibility
+        #     y_max_length_ = fix_len_compatibility(y_max_length)
+        #     global_step = self.global_step if hasattr(self, "global_step") else 0
+        #     self.logger.experiment.add_text("Monitoring/y_lengths", str(y_lengths.tolist()), global_step=global_step)
+        #     self.logger.experiment.add_text("Monitoring/y_max_length", str(y_max_length), global_step=global_step)
+        #     self.logger.experiment.add_text("Monitoring/y_max_length_", str(y_max_length_), global_step=global_step)
+
+        #     # Plot und logge ein Mel‑Spektrogramm des Fake-Mels:
+        #     try:
+        #         mel_plot = plot_tensor(fake_mel[0].detach().cpu())
+        #         self.logger.experiment.add_image("FakeMelSpec", mel_plot, global_step=global_step, dataformats='HWC')
+        #     except Exception as e:
+        #         print("[MONITOR] Could not plot fake mel spectrogram:", e)
 
         return {"d_loss": avg_d_loss, "g_loss": avg_g_loss}
