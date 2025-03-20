@@ -19,5 +19,5 @@ def migrate_checkpoint(checkpoint_path):
         print(f"An error occurred while migrating the checkpoint: {e}")
 
 if __name__ == "__main__":
-    checkpoint_path = "./ckpts/facetts_lrs3.pt"  # Replace with your actual checkpoint path
+    checkpoint_path = "./ckpts/facetts_lrs3.pt"  
     migrate_checkpoint(checkpoint_path)

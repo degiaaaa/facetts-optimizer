@@ -5,16 +5,19 @@ import torch.cuda.amp as amp
 from torch.optim import Adam
 import pytorch_lightning as pl
 from torch.nn.utils import weight_norm, spectral_norm
+from utils.scheduler import set_scheduler
+
 
 from model.face_tts import FaceTTS
 from model.feature_extractor import VoiceFeatureExtractor
 from model.discriminator import SpectrogramDiscriminator
 
-class FaceTTSWithDiscriminator(FaceTTS):
+class FaceTTSWithDiscriminator(pl.LightningModule):
     def __init__(self, _config):
-        super().__init__(_config)
+        super().__init__()
         self.config = _config
 
+        self.generator = FaceTTS(_config)
         # Instantiate discriminator and feature extractor.
         self.discriminator = SpectrogramDiscriminator(_config)
         #self.feature_extractor = VoiceFeatureExtractor(_config)
@@ -34,7 +37,6 @@ class FaceTTSWithDiscriminator(FaceTTS):
             # Beispielhaft, Hinge-Loss kann man so implementieren:
             def hinge_loss_fn(logits, target):
                 # target ist hier 1 oder 0, also +1 / -1 interpretieren
-                # Simple Implementation ...
                 signs = (2 * target - 1)  # {0->-1, 1->+1}
                 return torch.mean(nn.ReLU()(1 - signs * logits))
             self.adv_criterion = hinge_loss_fn
@@ -64,16 +66,27 @@ class FaceTTSWithDiscriminator(FaceTTS):
                 p.requires_grad = True
             self.freeze_gen_epochs = 0  # Do this only once
 
+    def forward(self, *args, **kwargs):
+        # Leite den Forward-Call an den Generator weiter
+        return self.generator.forward(*args, **kwargs)
+        
+    def compute_loss(self, *args, **kwargs):
+        # Delegiere die Verlustberechnung an den Generator
+        return self.generator.compute_loss(*args, **kwargs)
+
     def configure_optimizers(self):
         # Optionally use separate learning rates.
         gen_lr = self.config["learning_rate"]
         disc_lr = self.config.get("disc_learning_rate", gen_lr)
-        generator_optimizer = Adam(
-            list(self.encoder.parameters()) + list(self.decoder.parameters()),
-            lr=gen_lr
-        )
-        discriminator_optimizer = Adam(self.discriminator.parameters(), lr=disc_lr)
-        return [generator_optimizer, discriminator_optimizer]
+
+        gen_opt_list, gen_sched_list = set_scheduler(self.generator)
+        generator_optimizer = gen_opt_list[0]
+        generator_scheduler = gen_sched_list[0]
+
+        disc_eps = self.config.get("disc_eps", 1e-8)
+        discriminator_optimizer = Adam(self.discriminator.parameters(), lr=disc_lr, betas=(self.config["disc_betas_0"], self.config["disc_betas_1"]), eps=disc_eps)
+        # Return optimizers and scheduler configurations as lists.
+        return [generator_optimizer, discriminator_optimizer], [generator_scheduler]
 
     def training_step(self, batch, batch_idx):
         # Move data to device.
@@ -95,9 +108,7 @@ class FaceTTSWithDiscriminator(FaceTTS):
 
         # Get microbatch sizes (defined unconditionally)
         micro_batch_size = self.config.get("micro_batch_size", 16)
-        micro_batch_size_gen = self.config.get("micro_batch_size_gen", micro_batch_size)
         n_micro_batches = (B + micro_batch_size - 1) // micro_batch_size
-        n_micro_batches_gen = (B + micro_batch_size_gen - 1) // micro_batch_size_gen
 
         # Get optimizers.
         opt_gen, opt_disc = self.optimizers()
@@ -141,6 +152,7 @@ class FaceTTSWithDiscriminator(FaceTTS):
                     # self.logger.experiment.add_histogram("Discriminator/Fake_Logits", fake_logits.detach().cpu(), self.global_step)
                 self.manual_backward(d_loss / n_micro_batches)  # Accumulate gradients
                 total_d_loss += d_loss.item()
+            torch.nn.utils.clip_grad_norm_(self.discriminator.parameters(), max_norm=1.0)
             opt_disc.step()
             avg_d_loss = total_d_loss
             print(f"[DEBUG] Batch {batch_idx} -> Discriminator Loss: {avg_d_loss}")
@@ -148,8 +160,12 @@ class FaceTTSWithDiscriminator(FaceTTS):
             avg_d_loss = 0.0
 
         ### Generator Update ###
+        micro_batch_size_gen = self.config.get("micro_batch_size_gen", micro_batch_size)
+        n_micro_batches_gen = (B + micro_batch_size_gen - 1) // micro_batch_size_gen
+
         opt_gen.zero_grad()
         total_g_loss = 0.0
+
         for i in range(n_micro_batches_gen):
             start = i * micro_batch_size_gen
             end = min((i + 1) * micro_batch_size_gen, B)
@@ -160,7 +176,7 @@ class FaceTTSWithDiscriminator(FaceTTS):
             spk_mini = spk[start:end]
 
             with amp.autocast():
-                enc_out, dec_out, _ = self.forward(x_mini, x_len_mini, self.config['timesteps'], spk=spk_mini)
+                enc_out, dec_out, _ = self.generator.forward(x_mini, x_len_mini, self.config['timesteps'], spk=spk_mini)
                 fake_mel = dec_out[-1]
                 # If discriminator is active, compute adversarial loss.
                 if train_disc:
@@ -174,15 +190,14 @@ class FaceTTSWithDiscriminator(FaceTTS):
                 # self.log("train/lambda_adv", self.lambda_adv, prog_bar=True, on_step=False, on_epoch=True)
 
                 # Compute the original FaceTTS losses.
-                dur_loss, prior_loss, diff_loss, spk_loss = self.compute_loss(
+                dur_loss, prior_loss, diff_loss, spk_loss = self.generator.compute_loss(
                     x_mini, x_len_mini, y_mini, y_len_mini, spk=spk_mini
                 )
-                
-
                 # Combine all losses.
                 g_loss = (self.lambda_adv * adv_loss) + dur_loss + prior_loss + diff_loss  + (spk_loss)
             self.manual_backward(g_loss / n_micro_batches_gen)  # Accumulate gradients
             total_g_loss += g_loss.item()
+
         opt_gen.step()
         avg_g_loss = total_g_loss
 

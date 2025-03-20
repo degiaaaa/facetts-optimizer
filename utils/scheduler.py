@@ -16,14 +16,14 @@ def set_scheduler(pl_module):
     decay_power = pl_module.config["decay_power"]
     end_lr = pl_module.config["end_lr"]
     warmup_steps = pl_module.config["warmup_steps"]
-
+    gen_eps = pl_module.config["gen_eps"]  # <- added for GANsetup
     max_steps = pl_module.trainer.max_steps
 
     # Define Optimizer
     if optim_type == "adamw":
         optimizer = AdamW(pl_module.parameters(), lr=lr, eps=1e-8, betas=(0.9, 0.98))
     elif optim_type == "adam":
-        optimizer = torch.optim.Adam(pl_module.parameters(), lr=lr)
+        optimizer = torch.optim.Adam(pl_module.parameters(), lr=lr, eps=gen_eps)
     elif optim_type == "adam_diff":
         params = list(pl_module.named_parameters())
 

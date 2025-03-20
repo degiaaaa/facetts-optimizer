@@ -22,6 +22,9 @@ from config import ex
 @ex.automain
 def main(_config):
     pl.seed_everything(_config["seed"])
+    
+    # Early debug output so cluster_utils sees immediate results
+    print("[DEBUG] Starting evaluation", flush=True)
 
     print("\n######## Initializing Models ########")
     tts_model = FaceTTS(_config).cuda().eval()
@@ -53,7 +56,10 @@ def main(_config):
     os.makedirs(plot_dir, exist_ok=True)
 
     def find_wav_files(root_dir):
-        return sorted([os.path.join(root, f) for root, _, files in os.walk(root_dir) for f in files if f.endswith(".wav")])
+        return sorted([
+            os.path.join(root, f) for root, _, files in os.walk(root_dir)
+            for f in files if f.endswith(".wav")
+        ])
 
     generated_wavs = find_wav_files(generated_audio_dir)
     reference_wavs = find_wav_files(reference_audio_dir)
@@ -61,13 +67,20 @@ def main(_config):
     assert len(generated_wavs) == len(reference_wavs), "Mismatch in number of generated and reference audio files!"
 
     # Metrics containers
-    speaker_similarities, feature_matching_losses = [], []
-    l1_spectrogram_losses, f0_errors, mfcc_distances = [], [], []
-    mcd_values, stft_distances = [], []
+    speaker_similarities = []
+    feature_matching_losses = []
+    l1_spectrogram_losses = []
+    f0_errors = []
+    mfcc_distances = []
+    mcd_values = []
+    stft_distances = []
 
     with torch.no_grad():
-        for idx, (gen_wav, ref_wav) in tqdm(enumerate(zip(generated_wavs, reference_wavs)), total=len(generated_wavs), desc="Evaluating"):
-
+        for idx, (gen_wav, ref_wav) in tqdm(
+            enumerate(zip(generated_wavs, reference_wavs)),
+            total=len(generated_wavs),
+            desc="Evaluating"
+        ):
             print(f"\n[Processing Pair {idx+1}/{len(generated_wavs)}]")
             print(f"Generated: {gen_wav}")
             print(f"Reference: {ref_wav}")
@@ -83,8 +96,10 @@ def main(_config):
                 ref_audio = torchaudio.transforms.Resample(orig_freq=sr_ref, new_freq=sample_rate)(ref_audio)
 
             # Compute Mel Spectrograms
-            mel_gen = mel_spectrogram(gen_audio, n_fft, num_mels, sample_rate, hop_length, win_length, f_min, f_max, center=False)
-            mel_ref = mel_spectrogram(ref_audio, n_fft, num_mels, sample_rate, hop_length, win_length, f_min, f_max, center=False)
+            mel_gen = mel_spectrogram(gen_audio, n_fft, num_mels, sample_rate,
+                                      hop_length, win_length, f_min, f_max, center=False)
+            mel_ref = mel_spectrogram(ref_audio, n_fft, num_mels, sample_rate,
+                                      hop_length, win_length, f_min, f_max, center=False)
 
             print(f"Generated Mel Shape: {mel_gen.shape}, Reference Mel Shape: {mel_ref.shape}")
 
@@ -116,13 +131,13 @@ def main(_config):
 
             # F0 Error Analysis
             snd_gen, snd_ref = parselmouth.Sound(gen_wav), parselmouth.Sound(ref_wav)
-            f0_gen, f0_ref = snd_gen.to_pitch().selected_array['frequency'], snd_ref.to_pitch().selected_array['frequency']
-
+            f0_gen = snd_gen.to_pitch().selected_array['frequency']
+            f0_ref = snd_ref.to_pitch().selected_array['frequency']
             min_length = min(len(f0_gen), len(f0_ref))
             f0_error = np.mean(np.abs(f0_gen[:min_length] - f0_ref[:min_length]))
             f0_errors.append(f0_error)
 
-            # Plot F0 curves for debugging
+            # (Optional) Plot F0 curves — disabled by default
             # plt.figure(figsize=(10, 4))
             # plt.plot(f0_gen, label="Generated F0")
             # plt.plot(f0_ref, label="Reference F0")
@@ -145,7 +160,7 @@ def main(_config):
             stft_dist = torch.norm(mel_gen - mel_ref, p='fro').item()
             stft_distances.append(stft_dist)
 
-    # Save plots for debugging
+    # Save some histograms for debugging
     plt.figure()
     plt.hist(f0_errors, bins=30, alpha=0.7, label="F0 Errors")
     plt.legend()
@@ -158,17 +173,17 @@ def main(_config):
     plt.savefig(os.path.join(plot_dir, "stft_error_histogram.png"))
     plt.close()
 
-    # --- Hier den Composite Score berechnen und ausgeben ---
+    # --- Compute the Composite Score ---
     mean_speaker_similarity = np.mean(speaker_similarities)
     mean_f0_error = np.mean(f0_errors)
     mean_mcd = np.mean(mcd_values)
     mean_stft_distance = np.mean(stft_distances)
     composite = mean_f0_error + mean_mcd + (0.01 * mean_stft_distance) - (10 * mean_speaker_similarity)
-    
-    # Compute and print final results
-    print("\n######## Evaluation Results ########")
-    print(f"Mean Speaker Similarity: {mean_speaker_similarity:.4f}")
-    print(f"Mean F0 Error: {mean_f0_error:.4f}")
-    print(f"Mean MCD: {mean_mcd:.4f}")
-    print(f"Mean STFT Distance: {mean_stft_distance:.4f}")
-    print(f"Composite Metric: {composite:.4f}")
+
+    # Print final results, flush to ensure immediate output
+    print("\n######## Evaluation Results ########", flush=True)
+    print(f"Mean Speaker Similarity: {mean_speaker_similarity:.4f}", flush=True)
+    print(f"Mean F0 Error: {mean_f0_error:.4f}", flush=True)
+    print(f"Mean MCD: {mean_mcd:.4f}", flush=True)
+    print(f"Mean STFT Distance: {mean_stft_distance:.4f}", flush=True)
+    print(f"Composite Metric: {composite:.4f}", flush=True)

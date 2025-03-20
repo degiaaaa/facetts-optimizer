@@ -79,9 +79,9 @@ def config():
     # -----------------------------------------------------------------------------
     # GAN 
     # -----------------------------------------------------------------------------
+    use_gan = int(os.getenv("use_gan", 0))  # 0 = False, 1 = True
     denoise_factor = float(os.getenv("denoise_factor", 0))
-    gamma = os.getenv("gamma", 0.01) # speaker loss weight for facetts-module
-    use_gan = int(os.getenv("use_gan", 1))  # 0 = False, 1 = True
+    gamma = os.getenv("gamma", 0.005) # speaker loss weight for facetts #default 0.01
     disc_base_channels = int(os.getenv("disc_base_channels", 32))
     disc_num_layers = int(os.getenv("disc_num_layers", 3))
     disc_lrelu_slope = float(os.getenv("disc_lrelu_slope", 0.2))
@@ -94,15 +94,13 @@ def config():
     freeze_gen_epochs = int(os.getenv("freeze_gen_epochs", 0))
     micro_batch_size = int(os.getenv("micro_batch_size", 16))
 
-    disc_loss_type = os.getenv("disc_loss_type", "hinge" )  # oder "mse", "hinge" , "bce"
-    lambda_adv = float(os.getenv("lambda_adv", 0.01))
+    disc_loss_type = os.getenv("disc_loss_type", "hinge" )  # oder "mse", "hinge" , "bce" #default hinge
+    lambda_adv = float(os.getenv("lambda_adv",  0.01))  #default 0.01
     #accumulate_grad_batches = int(os.getenv("accumulate_grad_batches ", 4))
     #use_mixed_precision = int(os.getenv("use_mixed_precision", 0))  # 0 = False, 1 = True
-    #speaker_loss_weight = float(os.getenv("speaker_loss_weight", 0.01))
    
-
-    # Optimizer Configs
-    optim_type = os.getenv("optim_type", "adam")
+    # Optimizer Configs for Generator 
+    optim_type = os.getenv("optim_type", "adam") 
     schedule_type = os.getenv("schedule_type", "constant")
     learning_rate = float(os.getenv("learning_rate", 1e-4))
     end_lr = float(os.getenv("end_lr", 1e-7))
@@ -112,6 +110,14 @@ def config():
 
     save_step = int(os.getenv("save_step", 10000))
     warmup_steps = float(os.getenv("warmup_steps", 0))  # 1000
+    gen_eps = float(os.getenv("gen_eps", 1e-8))  
+
+    # Opimizer Configs for Discriminator 
+    disc_betas_0 = float(os.getenv("disc_betas_0", 0.9))  # First beta parameter for discriminator Adam # default 0.9 for disc 0.5?
+    disc_betas_1 = float(os.getenv("disc_betas_1", 0.999))  # Second beta parameter for discriminator Adam default 0.999 
+    # Discriminator-Optimizer Einstellungen
+    disc_eps = float(os.getenv("disc_eps", 1e-8))  #default 1e-8
+
 
     video_data_root = os.getenv("video_data_root", "mp4")
     image_data_root = os.getenv("image_data_root", "jpg")
@@ -125,8 +131,10 @@ def config():
     num_workers = int(os.getenv("num_workers", 2))  # Default is 2
     prefetch_factor = int(os.getenv("preftch_factor", 2))  # Default is 2
 
-    # Inference Configs
+    #Checkpoints loading
     resume_from = os.getenv("resume_from", "./ckpts/facetts_lrs3.pt")
+
+    # Inference Configs
     test_txt = os.getenv("test_txt", "test/text.txt")
     use_custom = int(os.getenv("use_custom", 1))
     test_faceimg = os.getenv("test_faceimg", "test/face.png") #CFD-AF-200-228-N.

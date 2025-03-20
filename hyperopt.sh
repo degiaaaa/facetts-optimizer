@@ -21,3 +21,4 @@ mkdir -p "$RESULTS_DIR"
 
 # Führe aus OHNE Terminal-Emulation
 srun --unbuffered python -u hyperopt.py hyperopt_config.json < /dev/null
+#srun --partition=a100-galvani --ntasks=1 --gres=gpu:4 --mem=50G python -u hyperopt.py hyperopt_config.json
