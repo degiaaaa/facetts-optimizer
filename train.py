@@ -113,7 +113,8 @@ def main(_config):
         val_check_interval=_config["val_check_interval"],
     )
     print("[DEBUG] Trainer initialized")
-
+    trainer.logger.log_hyperparams(_config)
+    
     # --------------------------------------------------------------------------
     # Train or Test
     # --------------------------------------------------------------------------

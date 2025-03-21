@@ -10,7 +10,7 @@ ex = Experiment("face-tts")
 def config():
     # Add this line to set a default value for perceptual_loss
     seed = int(os.getenv("seed", 37))
-    perceptual_loss = int(os.getenv("perceptual_loss", 1))  # True: 1 / False: 0
+    perceptual_loss = int(os.getenv("perceptual_loss", 1))  # True: 1 / False: 0 /Not mentioned in the Paper, why? Has to be true otherwise error
     #local_checkpoint_dir = os.getenv("local_checkpoint_dir", "./checkpoints")
 
     # Dataset Configs
@@ -81,7 +81,7 @@ def config():
     # -----------------------------------------------------------------------------
     use_gan = int(os.getenv("use_gan", 0))  # 0 = False, 1 = True
     denoise_factor = float(os.getenv("denoise_factor", 0))
-    gamma = os.getenv("gamma", 0.005) # speaker loss weight for facetts #default 0.01
+    gamma = os.getenv("gamma", 0.01) # speaker loss weight for facetts #default 0.01
     disc_base_channels = int(os.getenv("disc_base_channels", 32))
     disc_num_layers = int(os.getenv("disc_num_layers", 3))
     disc_lrelu_slope = float(os.getenv("disc_lrelu_slope", 0.2))
@@ -139,7 +139,7 @@ def config():
     use_custom = int(os.getenv("use_custom", 1))
     test_faceimg = os.getenv("test_faceimg", "test/face.png") #CFD-AF-200-228-N.
     timesteps = int(os.getenv("timesteps", 10))
-    output_dir_orig = os.getenv("output_dir", "/mnt/qb/work/butz/bst080/faceGANtts/test/synth_voices")
+    output_dir_orig = os.getenv("output_dir", "/mnt/qb/work/butz/bst080/faceGANtts/test/synth_voices_withLRS3Checkpoints")
     output_dir_gan = os.getenv("output_dir", "/mnt/qb/work/butz/bst080/faceGANtts/test/synth_voices_gan")
     ground_truth_dir =os.getenv("ground_truth_dir", "/mnt/qb/work2/butz1/bst080/data/mvlrs_v1/lrs2_splitted/wav/test/")
     results_path = os.getenv("results_path", "evaluation")
@@ -148,7 +148,7 @@ def config():
     syncnet_initb = float(os.getenv("syncnet_initb", -5.0))
 
     #resume checkpoints from for inference
-    infr_resume_from_orig = os.getenv("infr_resume_from_orig", "/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/facetts_original/checkpoints/last.ckpt")
+    infr_resume_from_orig = os.getenv("infr_resume_from_orig", "/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/version_1247146/checkpoints/epoch=15-step=1472.ckpt")
     infr_resume_from_gan = os.getenv("infr_resume_from_gan", "/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/gan_fm_false/checkpoints/epoch=45-step=8004.ckpt") #/mnt/qb/work/butz/bst080/faceGANtts/lightning_logs/gan_fm_false/checkpoints/epoch=45-step=8004.ckpt
 
     val_check_interval = float(os.getenv("val_check_interval", 1.0))

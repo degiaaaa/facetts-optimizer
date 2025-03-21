@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH -J train_orig_facetts_no_LRS3checkpoints
+#SBATCH -J DiscAmpScaler_genScheduler_gradclips
 #SBATCH --partition=a100-galvani  #2080-galvani #a100-fat-galvani  #a100-galvani
 #SBATCH --ntasks-per-node=4
 #SBATCH --gres=gpu:4
 #SBATCH --mem=50G                # Amount of memory
 #SBATCH --time=3-00:00:00       # Maximum runtime
-#SBATCH --output=train_orig_facetts_no_LRS3checkpoints%j.out                     #_gan_freeze5_warmup2_lr4_micro16_den0_adv01
-#SBATCH --error=train_orig_facetts_no_LRS3checkpoints%j.err
+#SBATCH --output=DiscAmpScaler_genScheduler_gradclips_%j.out                     #_gan_freeze5_warmup2_lr4_micro16_den0_adv01
+#SBATCH --error=DiscAmpScaler_genScheduler_gradclips_%j.err
 #SBATCH --mail-type=END,FAIL       # Notify when job ends or fails
 #SBATCH --mail-user=debie1997@yahoo.de  # Your email address
 
